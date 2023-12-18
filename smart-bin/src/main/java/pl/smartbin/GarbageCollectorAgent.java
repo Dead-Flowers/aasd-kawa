@@ -20,10 +20,13 @@ import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public class GarbageCollectorAgent extends Agent {
 
     private List<AID> beaconAgents = new ArrayList<>();
+
+    private GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
 
     protected Location parseAMSResponse(ACLMessage response) {
         Result results = null;
@@ -124,6 +127,9 @@ public class GarbageCollectorAgent extends Agent {
 
                         case ACLMessage.CONFIRM:
                             System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
+                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
+                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
+                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
                             break;
                     }
                 } else block();

@@ -6,7 +6,20 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.StaleProxyException;
 
+import javax.swing.*;
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainApplication {
+
+    private static final int FRAME_WIDTH = 800;
+    private static final int FRAME_HEIGHT = 800;
+    private static JFrame frame;
+    private static PlaneWithGarbageTrucks panel;
+    private static Map<String, JLabel> binStates;
+    private static AgentContainer container;
+
     public static void main(String[] args) {
         // -gui -name TEST
         Runtime runtime = Runtime.instance();
@@ -15,9 +28,9 @@ public class MainApplication {
         profile.setParameter(Profile.CONTAINER_NAME, "MyContainer");
         profile.setParameter(Profile.MAIN_HOST, "localhost");
         profile.setParameter(Profile.PLATFORM_ID, "MyPlatform");
-        AgentContainer container = runtime.createMainContainer(profile);
+        container = runtime.createMainContainer(profile);
 
-        for (int i = 1; i < 2; i++) {
+        for (int i = 1; i < 5; i++) {
             try {
                 container.createNewAgent("GarbageCollector " + i, "pl.smartbin.GarbageCollectorAgent", null)
                          .start();
@@ -26,10 +39,14 @@ public class MainApplication {
             }
         }
 
-        for (int i = 1; i < 3; i++) {
+        binStates = new HashMap<>();
+        for (int i = 1; i < 5; i++) {
             try {
                 container.createNewAgent("Bin " + i, "pl.smartbin.BinAgent", null)
                          .start();
+                var label = new JLabel("Bin " + i + " 0%");
+                label.setSize(200, 50);
+                binStates.put("Bin " + i, label);
             } catch (StaleProxyException e) {
                 e.printStackTrace();
             }
@@ -43,6 +60,43 @@ public class MainApplication {
                 e.printStackTrace();
             }
         }
+
+        SwingUtilities.invokeLater(MainApplication::startGUI);
     }
+
+    private static void startGUI() {
+        frame = new JFrame("AASD - KAWA GUI");
+        panel = new PlaneWithGarbageTrucks();
+
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+        frame.add(panel, BorderLayout.CENTER);
+
+        frame.add(new JPanel(), BorderLayout.NORTH);
+
+        frame.add(new JPanel(), BorderLayout.EAST);
+        frame.add(new JPanel(), BorderLayout.WEST);
+        Box box = Box.createVerticalBox();
+        frame.add(box, BorderLayout.SOUTH);
+
+        var binNames = binStates.keySet().stream().sorted().toList();
+
+        for(var key : binNames) {
+            box.add(binStates.get(key));
+        }
+
+        frame.pack();
+        frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        frame.setVisible(true);
+    }
+
+    public static void updateBinState(String name, Integer value) {
+        SwingUtilities.invokeLater(() -> binStates.get(name).setText(String.format("%s %s%%", name, value)));
+    }
+
+    public static void updateGarbageCollectorLocation(String name, GarbageCollector location) {
+        panel.setPoint(name, location);
+    }
+
 }
 

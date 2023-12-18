@@ -72,6 +72,7 @@ public class BinAgent extends Agent {
                         case ACLMessage.QUERY_REF:
                             String cont = "My current used capacity: " + usedCapacityPercent;
                             send(getResponse(msg, ACLMessage.INFORM, cont));
+                            MainApplication.updateBinState(getAID().getLocalName(), usedCapacityPercent);
                             System.out.println(getAID().getName() + ": " + cont + " [REPLY to " + msg.getSender().getName() + "]");
                             break;
                     }
