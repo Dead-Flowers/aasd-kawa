@@ -8,17 +8,21 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import pl.smartbin.MessageProtocol;
 
 public class BeaconAgent extends Agent {
 
     private List<AID> binAgents = new ArrayList<>();
+    private final HashMap<AID, Integer> binCapacities = new HashMap<>();
 
     protected ACLMessage getResponse(ACLMessage msg, int perf, String cont) {
         ACLMessage response = msg.createReply();
@@ -31,6 +35,18 @@ public class BeaconAgent extends Agent {
         return response;
     }
 
+    private void handleInform(ACLMessage msg) {
+        switch (msg.getProtocol()) {
+            case MessageProtocol.Bin2Beacon_Capacity:
+                var val = Integer.parseInt(msg.getContent());
+                binCapacities.put(msg.getSender(), val);
+                System.out.printf("[Beacon %s] Capacity of %s = %d\n", getName(), msg.getSender().getName(), val);
+                break;
+            default:
+                break;
+        }
+    }
+
     protected void setup() {
         System.out.println("Setting up '" + getAID().getName() + "'");
 
@@ -39,7 +55,11 @@ public class BeaconAgent extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         sd.setType("beacon");
-        sd.setName("BeaconAgent_"+ UUID.randomUUID());
+        sd.setName(getAID().getName());
+        var prop = new Property();
+        prop.setName("region_id");
+        prop.setValue(this.getArguments()[0]);
+        sd.addProperties(prop);
 
         dfd.addServices(sd);
         try {
@@ -48,27 +68,6 @@ public class BeaconAgent extends Agent {
         catch(FIPAException fe) {
             fe.printStackTrace();
         }
-
-        Behaviour bh1 = new TickerBehaviour(this, 2000) {
-            public void onTick() {
-                if (binAgents.isEmpty()) {
-                    DFAgentDescription template = new DFAgentDescription();
-                    ServiceDescription serviceDescription = new ServiceDescription();
-                    serviceDescription.setType("bin");
-                    template.addServices(serviceDescription);
-                    try {
-                        DFAgentDescription[] result = DFService.search(myAgent, template);
-                        for (DFAgentDescription dfAgentDescription : result) {
-                            binAgents.add(dfAgentDescription.getName());
-                        }
-                    } catch (FIPAException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-
-        addBehaviour(bh1);
 
         Behaviour b = new CyclicBehaviour(this) {
 
@@ -79,6 +78,7 @@ public class BeaconAgent extends Agent {
                     switch(msg.getPerformative()) {
 
                         case ACLMessage.INFORM:
+                            handleInform(msg);
                             System.out.println(getAID().getName() + ": " + msg.getContent() + " [from " + msg.getSender().getName() + "]");
                             break;
 

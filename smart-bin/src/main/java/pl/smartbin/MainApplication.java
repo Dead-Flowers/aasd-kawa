@@ -4,14 +4,24 @@ import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainApplication {
+
+    public enum AgentType{
+        Bin,
+        Beacon,
+        GarbageCollector
+    }
+
+    private static final Map<AgentType, ArrayList<AgentController>> agents = new HashMap<>();
 
     private static final int FRAME_WIDTH = 800;
     private static final int FRAME_HEIGHT = 800;
@@ -42,8 +52,8 @@ public class MainApplication {
         binStates = new HashMap<>();
         for (int i = 1; i < 5; i++) {
             try {
-                container.createNewAgent("Bin " + i, "pl.smartbin.BinAgent", null)
-                         .start();
+                var agent = container.createNewAgent("Bin " + i, "pl.smartbin.BinAgent", new Object[]{String.valueOf(i % 2)});
+                agent.start();
                 var label = new JLabel("Bin " + i + " 0%");
                 label.setSize(200, 50);
                 binStates.put("Bin " + i, label);
@@ -52,9 +62,9 @@ public class MainApplication {
             }
         }
 
-        for (int i = 1; i < 2; i++) {
+        for (Integer i = 0; i < 2; i++) {
             try {
-                container.createNewAgent("Beacon " + i, "pl.smartbin.BeaconAgent", null)
+                container.createNewAgent("Beacon " + i, "pl.smartbin.BeaconAgent", new Object[]{i.toString()})
                          .start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();

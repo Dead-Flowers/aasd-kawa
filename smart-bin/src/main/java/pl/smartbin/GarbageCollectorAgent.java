@@ -5,11 +5,10 @@ import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.Location;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -109,6 +108,7 @@ public class GarbageCollectorAgent extends Agent {
             public void action() {
                 ACLMessage rep = receive();
                 Location loc;
+                // TODO: blocking receive
                 if (rep != null) {
 
                     switch (rep.getPerformative()) {
