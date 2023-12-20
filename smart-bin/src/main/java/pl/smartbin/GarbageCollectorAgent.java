@@ -15,6 +15,8 @@ import jade.domain.FIPANames;
 import jade.domain.JADEAgentManagement.WhereIsAgentAction;
 import jade.domain.mobility.MobilityOntology;
 import jade.lang.acl.ACLMessage;
+import jade.proto.ProposeInitiator;
+import pl.smartbin.utils.AgentUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -71,6 +73,8 @@ public class GarbageCollectorAgent extends Agent {
     protected void setup() {
         System.out.println("Setting up '" + getAID().getName() + "'");
 
+        AgentUtils.registerAgent(this, AgentType.GARBAGE_COLLECTOR);
+
         Behaviour bh1 = new TickerBehaviour(this, 2000) {
             public void onTick() {
                 if (beaconAgents.isEmpty()) {
@@ -106,12 +110,18 @@ public class GarbageCollectorAgent extends Agent {
         Behaviour bh2 = new CyclicBehaviour(this) {
 
             public void action() {
+
                 ACLMessage rep = receive();
                 Location loc;
                 // TODO: blocking receive
                 if (rep != null) {
 
                     switch (rep.getPerformative()) {
+
+                        case ACLMessage.CFP:
+                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            handleCfp(rep);
+                            break;
 
                         case ACLMessage.ACCEPT_PROPOSAL:
                             System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
@@ -138,5 +148,8 @@ public class GarbageCollectorAgent extends Agent {
         };
 
         addBehaviour(bh2);
+    }
+
+    private void handleCfp(ACLMessage msg) {
     }
 }

@@ -2,10 +2,8 @@ package pl.smartbin;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.Location;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -13,10 +11,9 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import pl.smartbin.utils.MessageUtils;
 
 import java.util.UUID;
-
-import static pl.smartbin.Utils.*;
 
 public class BinAgent extends Agent {
 
@@ -85,7 +82,7 @@ public class BinAgent extends Agent {
                 if (beaconAID == null) {
                     return;
                 }
-                send(Utils.createMessage(ACLMessage.INFORM, MessageProtocol.Bin2Beacon_Capacity, usedCapacityPercent.toString(), beaconAID));
+                send(MessageUtils.createMessage(ACLMessage.INFORM, MessageProtocol.Bin2Beacon_Capacity, usedCapacityPercent.toString(), beaconAID));
             }
         };
 

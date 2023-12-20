@@ -15,12 +15,6 @@ import java.util.Map;
 
 public class MainApplication {
 
-    public enum AgentType{
-        Bin,
-        Beacon,
-        GarbageCollector
-    }
-
     private static final Map<AgentType, ArrayList<AgentController>> agents = new HashMap<>();
 
     private static final int FRAME_WIDTH = 800;
@@ -64,8 +58,11 @@ public class MainApplication {
 
         for (Integer i = 0; i < 2; i++) {
             try {
-                container.createNewAgent("Beacon " + i, "pl.smartbin.BeaconAgent", new Object[]{i.toString()})
+                Object[] agentArgs = new Object[]{i.toString()};
+                container.createNewAgent("Beacon " + i, "pl.smartbin.BeaconAgent", agentArgs)
                          .start();
+                container.createNewAgent("Supervisor " + i, SupervisorAgent.class.getName(), agentArgs)
+                        .start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();
             }

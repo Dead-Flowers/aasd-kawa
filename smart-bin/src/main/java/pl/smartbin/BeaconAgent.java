@@ -4,8 +4,6 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.Property;
@@ -16,8 +14,11 @@ import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
-import pl.smartbin.MessageProtocol;
+
+import pl.smartbin.utils.JsonUtils;
+import pl.smartbin.utils.MessageUtils;
+
+import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class BeaconAgent extends Agent {
 
@@ -41,6 +42,17 @@ public class BeaconAgent extends Agent {
                 var val = Integer.parseInt(msg.getContent());
                 binCapacities.put(msg.getSender(), val);
                 System.out.printf("[Beacon %s] Capacity of %s = %d\n", getName(), msg.getSender().getName(), val);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void handleQueryIf(ACLMessage msg) {
+        switch (msg.getProtocol()) {
+            case MessageProtocol.Supervisor2Beacon_Capacities:
+                msg.createReply();
+                send(MessageUtils.createReply(msg, ACLMessage.INFORM, JsonUtils.toJson(binCapacities.values())));
                 break;
             default:
                 break;
@@ -75,15 +87,16 @@ public class BeaconAgent extends Agent {
 
                 ACLMessage msg = receive();
                 if(msg != null) {
+                    logReceiveMsg(AgentType.BEACON, getName(), msg);
+
                     switch(msg.getPerformative()) {
 
                         case ACLMessage.INFORM:
                             handleInform(msg);
-                            System.out.println(getAID().getName() + ": " + msg.getContent() + " [from " + msg.getSender().getName() + "]");
                             break;
 
                         case ACLMessage.QUERY_IF:
-                            // TODO
+                            handleQueryIf(msg);
                             break;
 
                         case ACLMessage.PROPOSE:
