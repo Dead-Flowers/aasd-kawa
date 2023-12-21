@@ -8,20 +8,22 @@ import jade.core.Location;
 import jade.core.behaviours.*;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.JADEAgentManagement.WhereIsAgentAction;
 import jade.domain.mobility.MobilityOntology;
 import jade.lang.acl.ACLMessage;
-import jade.proto.ProposeInitiator;
 import pl.smartbin.utils.AgentUtils;
+import pl.smartbin.utils.JsonUtils;
+import pl.smartbin.utils.LoggingUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+
+import static pl.smartbin.utils.MessageUtils.createReply;
 
 public class GarbageCollectorAgent extends Agent {
 
@@ -119,12 +121,13 @@ public class GarbageCollectorAgent extends Agent {
                     switch (rep.getPerformative()) {
 
                         case ACLMessage.CFP:
-                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
                             handleCfp(rep);
                             break;
 
                         case ACLMessage.ACCEPT_PROPOSAL:
                             System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            handleAcceptProposal(rep);
                             break;
 
                         case ACLMessage.REJECT_PROPOSAL:
@@ -151,5 +154,20 @@ public class GarbageCollectorAgent extends Agent {
     }
 
     private void handleCfp(ACLMessage msg) {
+        if (MessageProtocol.Supervisor2GarbageCollector_Offer.equals(msg.getProtocol())) {
+            ACLMessage reply = createReply(msg, ACLMessage.PROPOSE, JsonUtils.toJson(currentLocation));
+            send(reply);
+            LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
+        }
+    }
+
+    private void handleAcceptProposal(ACLMessage msg) {
+        if (MessageProtocol.Supervisor2GarbageCollector_Offer.equals(msg.getProtocol())) {
+            // TODO wywóz śmieci
+
+            ACLMessage reply = createReply(msg, ACLMessage.INFORM, MessageProtocol.Supervisor2GarbageCollector_Finish, null);
+            send(reply);
+            LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
+        }
     }
 }

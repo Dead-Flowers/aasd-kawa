@@ -1,5 +1,6 @@
 package pl.smartbin.utils;
 
+import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import pl.smartbin.AgentType;
 
@@ -15,6 +16,12 @@ public class LoggingUtils {
 
     public static void logSendMsg(AgentType agentType, String senderName, String receiverName, String content) {
         log(agentType, senderName, "sent message to %s, content: %s".formatted(receiverName, content));
+    }
+
+    public static void logSendMsg(AgentType agentType, ACLMessage msg) {
+        msg.getAllReceiver()
+           .forEachRemaining(receiverAID -> logSendMsg(agentType, msg.getSender().getName(),
+                                                       ((AID) receiverAID).getName(), msg.getContent()));
     }
 
     public static void logReceiveMsg(AgentType agentType, String receiverName, ACLMessage message) {

@@ -1,13 +1,14 @@
 package pl.smartbin;
 
 import java.awt.*;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Random;
 
-public class GarbageCollector {
+public class GarbageCollector implements Serializable {
     private float latitude;
     private float longitude;
-    private Color color;
+    private transient Color color;
 
     public GarbageCollector(float latitude, float longitude, Color color) {
         this.latitude = latitude;

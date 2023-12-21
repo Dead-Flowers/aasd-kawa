@@ -25,4 +25,12 @@ public class MessageUtils {
 
         return reply;
     }
+
+    public static ACLMessage createReply(ACLMessage msg, int type, String protocol, String content) {
+        ACLMessage reply = msg.createReply(type);
+        reply.setProtocol(protocol);
+        reply.setContent(content);
+
+        return reply;
+    }
 }

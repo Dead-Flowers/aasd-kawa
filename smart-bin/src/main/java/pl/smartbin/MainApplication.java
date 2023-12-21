@@ -6,6 +6,7 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import pl.smartbin.agent.supervisor.SupervisorAgent;
 
 import javax.swing.*;
 import java.awt.*;
