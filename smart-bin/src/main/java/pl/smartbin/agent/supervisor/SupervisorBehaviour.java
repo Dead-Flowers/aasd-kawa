@@ -6,8 +6,10 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.proto.ContractNetInitiator;
 import pl.smartbin.AgentType;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.utils.AgentUtils;
@@ -18,12 +20,14 @@ import pl.smartbin.utils.MessageUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static pl.smartbin.utils.LoggingUtils.*;
 import static pl.smartbin.utils.LoggingUtils.log;
 
-public class SupervisorBehaviour extends FSMBehaviour {
+public class SupervisorBehaviour extends ContractNetInitiator {
 
     static final String CHECK_ENV = "check-env";
     static final String SEND_MESS = "send-mess";
@@ -44,7 +48,10 @@ public class SupervisorBehaviour extends FSMBehaviour {
     private Runnable beforeEnd;
 
     public SupervisorBehaviour(SupervisorAgent a) {
-        super(a);
+
+        super(a, MessageUtils.createMessage(ACLMessage.CFP,
+                FIPANames.InteractionProtocol.FIPA_CONTRACT_NET,
+                AgentUtils.findGarbageCollectors(a, AgentType.SUPERVISOR)));
 
         this.agent = a;
 
@@ -221,5 +228,35 @@ public class SupervisorBehaviour extends FSMBehaviour {
 
     private AID getWinnerAID() {
         return gcAIDs[0];
+    }
+
+    private AID getWinnerAID(ACLMessage[] responses) {
+        return responses[0].getSender();
+    }
+
+    @Override
+    protected void handleAllResponses(Vector responses, Vector acceptances) {
+
+        var castedResponses = new ACLMessage[responses.size()];
+
+        for (int i = 0; i < responses.size(); i++) {
+            castedResponses[i] = (ACLMessage)responses.elementAt(i);
+        }
+
+        var winnerAID = getWinnerAID(castedResponses);
+        log(AgentType.SUPERVISOR, agent.getName(), "Winner of the auction is %s".formatted(winnerAID.getName()));
+
+        acceptances.add(MessageUtils.createMessage(ACLMessage.ACCEPT_PROPOSAL,
+                FIPANames.InteractionProtocol.FIPA_CONTRACT_NET,
+                winnerAID));
+
+        var loserAIDs = Arrays.stream(castedResponses)
+                .map(ACLMessage::getSender)
+                .filter(sender -> !winnerAID.equals(sender))
+                .toArray(ACLMessage[]::new);
+
+        acceptances.add(MessageUtils.createMessage(ACLMessage.REJECT_PROPOSAL,
+                FIPANames.InteractionProtocol.FIPA_CONTRACT_NET,
+                loserAIDs));
     }
 }
