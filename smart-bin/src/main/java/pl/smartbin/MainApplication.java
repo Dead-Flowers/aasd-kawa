@@ -6,6 +6,7 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import pl.smartbin.agent.garbage_collector.GarbageCollector;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
 
 import javax.swing.*;
@@ -37,7 +38,7 @@ public class MainApplication {
 
         for (int i = 1; i < 5; i++) {
             try {
-                container.createNewAgent("GarbageCollector " + i, "pl.smartbin.GarbageCollectorAgent", null)
+                container.createNewAgent("GarbageCollector " + i, "pl.smartbin.agent.garbage_collector.GarbageCollectorAgent", null)
                          .start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();

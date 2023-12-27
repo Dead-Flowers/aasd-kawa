@@ -1,4 +1,4 @@
-package pl.smartbin;
+package pl.smartbin.agent.garbage_collector;
 
 import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
@@ -7,13 +7,15 @@ import jade.core.Agent;
 import jade.core.Location;
 import jade.core.behaviours.*;
 import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.JADEAgentManagement.WhereIsAgentAction;
 import jade.domain.mobility.MobilityOntology;
 import jade.lang.acl.ACLMessage;
+import jade.proto.ContractNetResponder;
+import pl.smartbin.AgentType;
+import pl.smartbin.MessageProtocol;
 import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
@@ -109,46 +111,49 @@ public class GarbageCollectorAgent extends Agent {
 
         addBehaviour(bh1);
 
-        Behaviour bh2 = new CyclicBehaviour(this) {
+//        Behaviour bh2 = new CyclicBehaviour(this) {
+//
+//            public void action() {
+//
+//                ACLMessage rep = receive();
+//                Location loc;
+//                // TODO: blocking receive
+//                if (rep != null) {
+//
+//                    switch (rep.getPerformative()) {
+//
+//                        case ACLMessage.CFP:
+//                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
+//                            handleCfp(rep);
+//                            break;
+//
+//                        case ACLMessage.ACCEPT_PROPOSAL:
+//                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
+//                            handleAcceptProposal(rep);
+//                            break;
+//
+//                        case ACLMessage.REJECT_PROPOSAL:
+//                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
+//                            break;
+//
+//                        case ACLMessage.INFORM:
+//                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
+//                            break;
+//
+//                        case ACLMessage.CONFIRM:
+//                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
+//                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
+//                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
+//                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
+//                            break;
+//                    }
+//                } else block();
+//            }
+//
+//        };
+//        bh2.reset();
 
-            public void action() {
-
-                ACLMessage rep = receive();
-                Location loc;
-                // TODO: blocking receive
-                if (rep != null) {
-
-                    switch (rep.getPerformative()) {
-
-                        case ACLMessage.CFP:
-                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
-                            handleCfp(rep);
-                            break;
-
-                        case ACLMessage.ACCEPT_PROPOSAL:
-                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
-                            handleAcceptProposal(rep);
-                            break;
-
-                        case ACLMessage.REJECT_PROPOSAL:
-                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
-                            break;
-
-                        case ACLMessage.INFORM:
-                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
-                            break;
-
-                        case ACLMessage.CONFIRM:
-                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
-                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
-                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
-                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
-                            break;
-                    }
-                } else block();
-            }
-
-        };
+        Behaviour bh2 = new GarbageCollectorBehaviour(this, () -> currentLocation);
 
         addBehaviour(bh2);
     }

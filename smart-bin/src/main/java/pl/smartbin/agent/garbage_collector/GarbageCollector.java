@@ -1,4 +1,4 @@
-package pl.smartbin;
+package pl.smartbin.agent.garbage_collector;
 
 import java.awt.*;
 import java.io.Serializable;

@@ -1,10 +1,11 @@
 package pl.smartbin;
 
+import pl.smartbin.agent.garbage_collector.GarbageCollector;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class PlaneWithGarbageTrucks extends JPanel {
     private final Map<String, GarbageCollector> pointsMap;
