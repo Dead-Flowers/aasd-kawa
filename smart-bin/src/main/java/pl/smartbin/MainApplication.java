@@ -48,7 +48,7 @@ public class MainApplication {
         binStates = new HashMap<>();
         for (int i = 1; i < 5; i++) {
             try {
-                var agent = container.createNewAgent("Bin " + i, "pl.smartbin.BinAgent", new Object[]{String.valueOf(i % 2)});
+                var agent = container.createNewAgent("Bin " + i, "pl.smartbin.agent.bin.BinAgent", new Object[]{String.valueOf(i % 2)});
                 agent.start();
                 var label = new JLabel("Bin " + i + " 0%");
                 label.setSize(200, 50);
@@ -61,7 +61,7 @@ public class MainApplication {
         for (Integer i = 0; i < 2; i++) {
             try {
                 Object[] agentArgs = new Object[]{i.toString()};
-                container.createNewAgent("Beacon " + i, "pl.smartbin.BeaconAgent", agentArgs)
+                container.createNewAgent("Beacon " + i, "pl.smartbin.agent.beacon.BeaconAgent", agentArgs)
                          .start();
                 container.createNewAgent("Supervisor " + i, SupervisorAgent.class.getName(), agentArgs)
                         .start();
