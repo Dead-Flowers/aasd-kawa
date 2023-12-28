@@ -14,6 +14,8 @@ import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.function.Supplier;
 
 import static pl.smartbin.utils.MessageUtils.createReply;
@@ -31,7 +33,7 @@ public class GarbageCollectorBehaviour extends ContractNetResponder {
         deregisterDefaultTransition(HANDLE_ACCEPT_PROPOSAL);
         registerDefaultTransition(HANDLE_ACCEPT_PROPOSAL, COLLECT_GARBAGE);
         registerDefaultTransition(COLLECT_GARBAGE, SEND_REPLY);
-        // może dodać jakieś wyjątkowe stany
+        // latitmoże dodać jakieś wyjątkowe stany
 
         Behaviour b;
 
@@ -49,17 +51,23 @@ public class GarbageCollectorBehaviour extends ContractNetResponder {
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
         LoggingUtils.logReceiveMsg(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), cfp);
-        return createReply(cfp, ACLMessage.PROPOSE, JsonUtils.toJson(locationSupplier.get()));
+        ACLMessage msg = createReply(cfp, ACLMessage.PROPOSE, JsonUtils.toJson(locationSupplier.get()));
+//        msg.setReplyByDate(Date.from(Instant.now().plusSeconds(10)));
+        return msg;
     }
 
     @Override
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Accept proposal");
+        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Accept proposal from " + accept.getSender().getName());
         return MessageUtils.createReply(accept, ACLMessage.INFORM, null);
     }
 
     @Override
     protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Reject proposal");
+        if (reject == null || reject.getSender() == null) {
+            LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "REJECT!! " + cfp.getSender().getName());
+            return;
+        }
+        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Reject proposal from " + reject.getSender().getName());
     }
 }

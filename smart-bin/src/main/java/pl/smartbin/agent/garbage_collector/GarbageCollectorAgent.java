@@ -79,100 +79,96 @@ public class GarbageCollectorAgent extends Agent {
 
         AgentUtils.registerAgent(this, AgentType.GARBAGE_COLLECTOR);
 
-        Behaviour bh1 = new TickerBehaviour(this, 2000) {
-            public void onTick() {
-                if (beaconAgents.isEmpty()) {
-                    DFAgentDescription template = new DFAgentDescription();
-                    ServiceDescription serviceDescription = new ServiceDescription();
-                    serviceDescription.setType("beacon");
-                    template.addServices(serviceDescription);
-                    try {
-                        DFAgentDescription[] result = DFService.search(myAgent, template);
-                        for (DFAgentDescription dfAgentDescription : result) {
-                            beaconAgents.add(dfAgentDescription.getName());
-                        }
-                    } catch (FIPAException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    for (AID beaconAgent : beaconAgents) {
-                        ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-                        msg.setLanguage("English");
-                        msg.setOntology("test-ontology");
-                        msg.addReceiver(beaconAgent);
-                        String cont = "Do you have trash?";
-                        msg.setContent(cont);
-                        System.out.println(getAID().getName() + ": " + cont + " [to " + beaconAgent.getName() + "]");
-                        send(msg);
-                    }
-                }
-            }
-        };
-
-        addBehaviour(bh1);
-
-//        Behaviour bh2 = new CyclicBehaviour(this) {
-//
-//            public void action() {
-//
-//                ACLMessage rep = receive();
-//                Location loc;
-//                // TODO: blocking receive
-//                if (rep != null) {
-//
-//                    switch (rep.getPerformative()) {
-//
-//                        case ACLMessage.CFP:
-//                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
-//                            handleCfp(rep);
-//                            break;
-//
-//                        case ACLMessage.ACCEPT_PROPOSAL:
-//                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
-//                            handleAcceptProposal(rep);
-//                            break;
-//
-//                        case ACLMessage.REJECT_PROPOSAL:
-//                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
-//                            break;
-//
-//                        case ACLMessage.INFORM:
-//                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
-//                            break;
-//
-//                        case ACLMessage.CONFIRM:
-//                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
-//                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
-//                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
-//                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
-//                            break;
+//        Behaviour bh1 = new TickerBehaviour(this, 2000) {
+//            public void onTick() {
+//                if (beaconAgents.isEmpty()) {
+//                    DFAgentDescription template = new DFAgentDescription();
+//                    ServiceDescription serviceDescription = new ServiceDescription();
+//                    serviceDescription.setType("beacon");
+//                    template.addServices(serviceDescription);
+//                    try {
+//                        DFAgentDescription[] result = DFService.search(myAgent, template);
+//                        for (DFAgentDescription dfAgentDescription : result) {
+//                            beaconAgents.add(dfAgentDescription.getName());
+//                        }
+//                    } catch (FIPAException e) {
+//                        e.printStackTrace();
 //                    }
-//                } else block();
+//                } else {
+//                    for (AID beaconAgent : beaconAgents) {
+//                        ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+//                        msg.setLanguage("English");
+//                        msg.setOntology("test-ontology");
+//                        msg.addReceiver(beaconAgent);
+//                        String cont = "Do you have trash?";
+//                        msg.setContent(cont);
+//                        System.out.println(getAID().getName() + ": " + cont + " [to " + beaconAgent.getName() + "]");
+//                        send(msg);
+//                    }
+//                }
 //            }
-//
 //        };
-//        bh2.reset();
+//
+//        addBehaviour(bh1);
 
-        Behaviour bh2 = new GarbageCollectorBehaviour(this, () -> currentLocation);
+        Behaviour bh2 = new CyclicBehaviour(this) {
 
+            public void action() {
+
+                ACLMessage rep = receive();
+                Location loc;
+                // TODO: blocking receive
+                if (rep != null) {
+
+                    switch (rep.getPerformative()) {
+
+                        case ACLMessage.CFP:
+                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            handleCfp(rep);
+                            break;
+
+                        case ACLMessage.ACCEPT_PROPOSAL:
+                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            handleAcceptProposal(rep);
+                            break;
+
+                        case ACLMessage.REJECT_PROPOSAL:
+                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            break;
+
+                        case ACLMessage.INFORM:
+                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
+                            break;
+
+                        case ACLMessage.CONFIRM:
+                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
+                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
+                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
+//                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
+                            break;
+                    }
+                } else block();
+            }
+
+        };
+        bh2.reset();
+
+//        Behaviour bh2 = new GarbageCollectorBehaviour(this, () -> currentLocation);
+//
         addBehaviour(bh2);
     }
 
     private void handleCfp(ACLMessage msg) {
-        if (MessageProtocol.Supervisor2GarbageCollector_Offer.equals(msg.getProtocol())) {
-            ACLMessage reply = createReply(msg, ACLMessage.PROPOSE, JsonUtils.toJson(currentLocation));
-            send(reply);
-            LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
-        }
+        ACLMessage reply = createReply(msg, ACLMessage.PROPOSE, JsonUtils.toJson(currentLocation));
+        send(reply);
+        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
     }
 
     private void handleAcceptProposal(ACLMessage msg) {
-        if (MessageProtocol.Supervisor2GarbageCollector_Offer.equals(msg.getProtocol())) {
-            // TODO wywóz śmieci
+        // TODO wywóz śmieci
 
-            ACLMessage reply = createReply(msg, ACLMessage.INFORM, MessageProtocol.Supervisor2GarbageCollector_Finish, null);
-            send(reply);
-            LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
-        }
+        ACLMessage reply = createReply(msg, ACLMessage.INFORM,  null);
+        send(reply);
+        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
     }
 }

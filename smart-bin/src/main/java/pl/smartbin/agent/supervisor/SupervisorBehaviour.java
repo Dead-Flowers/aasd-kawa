@@ -64,6 +64,7 @@ public class SupervisorBehaviour extends FSMBehaviour {
             @Override
             public int onEnd() {
                 if (agent.getBeaconAID() == null) {
+                    System.out.println("BeaconID " + agent.getBeaconAID().getName());
                     return 0;
                 }
                 return 1;
@@ -102,6 +103,7 @@ public class SupervisorBehaviour extends FSMBehaviour {
         b = new OneShotBehaviour(a) {
             public void action() {
                 if (beforeEnd != null) {
+                    System.out.println("Running before end");
                     beforeEnd.run();
                 }
             }
@@ -137,7 +139,7 @@ public class SupervisorBehaviour extends FSMBehaviour {
         gcAIDs = AgentUtils.findGarbageCollectors(agent, AgentType.SUPERVISOR);
         log(AgentType.SUPERVISOR, agent.getName(), "found %s garbage collectors".formatted(gcAIDs.length));
         ACLMessage cfp = MessageUtils.createMessage(ACLMessage.CFP, FIPANames.InteractionProtocol.FIPA_CONTRACT_NET, gcAIDs);
-        cfp.setReplyByDate(Date.from(Instant.now().plusSeconds(5)));
+        cfp.setReplyByDate(Date.from(Instant.now().plusSeconds(7)));
 
         return cfp;
     }

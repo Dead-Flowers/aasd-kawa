@@ -3,20 +3,15 @@ package pl.smartbin.agent.supervisor;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetInitiator;
-import jade.util.leap.Iterator;
 import pl.smartbin.AgentType;
 import pl.smartbin.utils.MessageUtils;
 
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 import java.util.function.Supplier;
 
-import static pl.smartbin.utils.LoggingUtils.log;
-import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
+import static pl.smartbin.utils.LoggingUtils.*;
 
 public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
 
@@ -50,23 +45,38 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
 
         for (Object response : responses) {
             ACLMessage resp = (ACLMessage) response;
-            ACLMessage reply = MessageUtils.createReply(resp, ACLMessage.REJECT_PROPOSAL, null);
+            log(AgentType.SUPERVISOR, myAgent.getName(), "Perforative " + ((ACLMessage) response).getPerformative());
+            if (ACLMessage.PROPOSE == resp.getPerformative()) {
+                ACLMessage reply = MessageUtils.createReply(resp, ACLMessage.REJECT_PROPOSAL, null);
 
-            if (bestOffer == null) {
-                bestOffer = reply;
+                if (bestOffer == null) {
+                    reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                    bestOffer = reply;
+                }
+
+                acceptances.add(reply);
             }
-
-            acceptances.add(reply);
         }
         log(AgentType.SUPERVISOR, myAgent.getName(), "Acceptances : " + acceptances.size());
 
-        if (bestOffer != null) {
-            bestOffer.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+        for (Object accept : acceptances) {
+            ACLMessage resp = (ACLMessage) accept;
+            log(AgentType.SUPERVISOR, myAgent.getName(), "Accept performative " + ((ACLMessage) accept).getPerformative());
         }
     }
 
     @Override
     protected void handleAllResultNotifications(Vector resultNotifications) {
         log(AgentType.SUPERVISOR, myAgent.getName(), "All result notifications");
+    }
+
+    @Override
+    protected Vector prepareCfps(ACLMessage cfp) {
+        Vector x = super.prepareCfps(cfp);
+        for (Object msg : x) {
+            ((ACLMessage) msg).getAllReceiver().forEachRemaining(aid -> log(AgentType.SUPERVISOR, myAgent.getName(), "Preparing CFP for " + aid));
+
+        }
+        return x;
     }
 }

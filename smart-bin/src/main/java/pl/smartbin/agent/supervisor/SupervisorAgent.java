@@ -30,7 +30,7 @@ public class SupervisorAgent extends Agent {
         var discoveryBh = new TickerBehaviour(this, TimeUnit.SECONDS.toMillis(1)) {
             @Override
             public void onTick() {
-                if (!inProgress) {
+                if (beaconAID == null) {
                     beaconAID = AgentUtils.findBeacon(myAgent, AgentType.SUPERVISOR, region);
                 }
             }
@@ -40,11 +40,11 @@ public class SupervisorAgent extends Agent {
 
             @Override
             protected void onTick() {
+                System.out.println("In progress: " + inProgress);
                 if (beaconAID == null || inProgress) {
                     return;
                 }
                 inProgress = true;
-
                 addBehaviour(new SupervisorBehaviour((SupervisorAgent) myAgent)
                                      .onBeforeEnd(() -> setInProgress(false)));
             }
