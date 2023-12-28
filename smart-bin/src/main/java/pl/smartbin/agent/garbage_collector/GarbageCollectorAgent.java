@@ -19,6 +19,7 @@ import pl.smartbin.MessageProtocol;
 import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
+import pl.smartbin.MainApplication;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -111,49 +112,49 @@ public class GarbageCollectorAgent extends Agent {
 
         addBehaviour(bh1);
 
-//        Behaviour bh2 = new CyclicBehaviour(this) {
-//
-//            public void action() {
-//
-//                ACLMessage rep = receive();
-//                Location loc;
-//                // TODO: blocking receive
-//                if (rep != null) {
-//
-//                    switch (rep.getPerformative()) {
-//
-//                        case ACLMessage.CFP:
-//                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
-//                            handleCfp(rep);
-//                            break;
-//
-//                        case ACLMessage.ACCEPT_PROPOSAL:
-//                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
-//                            handleAcceptProposal(rep);
-//                            break;
-//
-//                        case ACLMessage.REJECT_PROPOSAL:
-//                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
-//                            break;
-//
-//                        case ACLMessage.INFORM:
-//                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
-//                            break;
-//
-//                        case ACLMessage.CONFIRM:
-//                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
-//                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
-//                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
-//                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
-//                            break;
-//                    }
-//                } else block();
-//            }
-//
-//        };
-//        bh2.reset();
+        Behaviour bh2 = new CyclicBehaviour(this) {
 
-        Behaviour bh2 = new GarbageCollectorBehaviour(this, () -> currentLocation);
+            public void action() {
+
+                ACLMessage rep = receive();
+                Location loc;
+                // TODO: blocking receive
+                if (rep != null) {
+
+                    switch (rep.getPerformative()) {
+
+                        case ACLMessage.CFP:
+                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            handleCfp(rep);
+                            break;
+
+                        case ACLMessage.ACCEPT_PROPOSAL:
+                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            handleAcceptProposal(rep);
+                            break;
+
+                        case ACLMessage.REJECT_PROPOSAL:
+                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
+                            break;
+
+                        case ACLMessage.INFORM:
+                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
+                            break;
+
+                        case ACLMessage.CONFIRM:
+                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
+                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
+                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
+                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
+                            break;
+                    }
+                } else block();
+            }
+
+        };
+        bh2.reset();
+
+        // Behaviour bh2 = new GarbageCollectorBehaviour(this, () -> currentLocation);
 
         addBehaviour(bh2);
     }

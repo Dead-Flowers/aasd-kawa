@@ -6,6 +6,7 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.StaleProxyException;
+import pl.smartbin.agent.bin.BinCollection;
 import pl.smartbin.agent.garbage_collector.GarbageCollector;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
 
@@ -49,10 +50,12 @@ public class MainApplication {
         for (int i = 1; i < 5; i++) {
             try {
                 var agent = container.createNewAgent("Bin " + i, "pl.smartbin.agent.bin.BinAgent", new Object[]{String.valueOf(i % 2)});
+                System.out.println(agent.getName());
                 agent.start();
                 var label = new JLabel("Bin " + i + " 0%");
                 label.setSize(200, 50);
                 binStates.put("Bin " + i, label);
+                BinCollection.getInstance().put(agent.getName(), 0);
             } catch (StaleProxyException e) {
                 e.printStackTrace();
             }

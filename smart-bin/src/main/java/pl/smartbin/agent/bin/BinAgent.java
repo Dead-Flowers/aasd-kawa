@@ -11,15 +11,16 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import pl.smartbin.agent.garbage_collector.GarbageCollector;
 import pl.smartbin.utils.MessageUtils;
 import pl.smartbin.MainApplication;
 import pl.smartbin.MessageProtocol;
 
+import java.util.Random;
 import java.util.UUID;
 
 public class BinAgent extends Agent {
 
-    private Integer usedCapacityPercent = 52;
     private String regionId;
     private AID beaconAID;
 
@@ -83,7 +84,8 @@ public class BinAgent extends Agent {
                 if (beaconAID == null) {
                     return;
                 }
-                send(MessageUtils.createMessage(ACLMessage.INFORM, MessageProtocol.Bin2Beacon_Capacity, usedCapacityPercent.toString(), beaconAID));
+                var usedCapacity = BinCollection.getInstance().getBin(this.myAgent.getName()).getUsedCapacityPercent();
+                send(MessageUtils.createMessage(ACLMessage.INFORM, MessageProtocol.Bin2Beacon_Capacity, usedCapacity.toString(), beaconAID));
             }
         };
 
@@ -97,28 +99,9 @@ public class BinAgent extends Agent {
                 }
                 switch (msg.getPerformative()) {
 
-                    case ACLMessage.ACCEPT_PROPOSAL:
-                        System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
+                    case ACLMessage.INFORM -> handleInform(msg);
+                    case ACLMessage.PROPOSE -> handlePropose(msg);
 
-                    case ACLMessage.REJECT_PROPOSAL:
-                        System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.INFORM:
-                        System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.CONFIRM:
-                        System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.QUERY_REF:
-                        String cont = "My current used capacity: " + usedCapacityPercent;
-                        send(getResponse(msg, ACLMessage.INFORM, cont));
-                        MainApplication.updateBinState(getAID().getLocalName(), usedCapacityPercent);
-                        System.out.println(getAID().getName() + ": " + cont + " [REPLY to " + msg.getSender().getName() + "]");
-                        break;
                 }
             }
 
@@ -128,4 +111,21 @@ public class BinAgent extends Agent {
         addBehaviour(informCapacityBh);
         addBehaviour(bh2);
     }
+
+    private void handlePropose(ACLMessage msg) {
+
+
+
+    }
+
+    private void handleInform(ACLMessage msg) {
+
+        // TODO: Oddelegować dodawanie śmieci do koszy do innej klasy
+        BinCollection.getInstance().getBin(this.getName()).fill();
+
+
+
+    }
+
+
 }
