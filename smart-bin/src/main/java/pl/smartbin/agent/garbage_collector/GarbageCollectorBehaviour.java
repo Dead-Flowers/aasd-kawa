@@ -14,8 +14,6 @@ import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.function.Supplier;
 
 import static pl.smartbin.utils.MessageUtils.createReply;

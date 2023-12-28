@@ -1,19 +1,11 @@
 package pl.smartbin.agent.garbage_collector;
 
-import jade.content.onto.basic.Action;
-import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.Location;
-import jade.core.behaviours.*;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.*;
-import jade.domain.FIPAException;
-import jade.domain.FIPANames;
-import jade.domain.JADEAgentManagement.WhereIsAgentAction;
-import jade.domain.mobility.MobilityOntology;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
-import jade.proto.ContractNetResponder;
 import pl.smartbin.AgentType;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.utils.AgentUtils;
@@ -21,10 +13,10 @@ import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import static pl.smartbin.utils.MessageUtils.createMessage;
 import static pl.smartbin.utils.MessageUtils.createReply;
 
 public class GarbageCollectorAgent extends Agent {
@@ -33,46 +25,6 @@ public class GarbageCollectorAgent extends Agent {
 
     private GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
 
-    protected Location parseAMSResponse(ACLMessage response) {
-        Result results = null;
-        try {
-            results = (Result) getContentManager().extractContent(response);
-        } catch (Exception e) {
-        }
-
-        Iterator it = results.getItems().iterator();
-
-        Location loc = null;
-        if (it.hasNext()) {
-            loc = (Location) it.next();
-        }
-
-        return loc;
-    }
-
-    private ACLMessage prepareRequestToAMS(AID agent) {
-
-        ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-
-        request.addReceiver(getAMS());
-        request.setLanguage(FIPANames.ContentLanguage.FIPA_SL0);
-        request.setOntology(MobilityOntology.NAME);
-        request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-
-        Action act = new Action();
-        act.setActor(getAMS());
-
-        WhereIsAgentAction action = new WhereIsAgentAction();
-        action.setAgentIdentifier(agent);
-        act.setAction(action);
-
-        try {
-            getContentManager().fillContent(request, act);
-        } catch (Exception e) {
-        }
-
-        return request;
-    }
 
     protected void setup() {
         System.out.println("Setting up '" + getAID().getName() + "'");
@@ -165,10 +117,34 @@ public class GarbageCollectorAgent extends Agent {
     }
 
     private void handleAcceptProposal(ACLMessage msg) {
-        // TODO wywóz śmieci
+        if (MessageProtocol.Bin2GarbageCollector.equals(msg.getProtocol())) {
+            handleSingleBinGarbageCollection(msg);
+        } else {
+            handleGarbageCollectionProcess(msg);
+        }
+    }
+
+    private void handleSingleBinGarbageCollection(ACLMessage msg) {
+        ACLMessage reply = createReply(msg, ACLMessage.INFORM, null);
+        send(reply);
+        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
+    }
+
+    private void handleGarbageCollectionProcess(ACLMessage msg) {
+        String regionId = msg.getContent();
+        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, getName(), "Starting garbage collection in region: " + regionId);
+        sendGarbageCollectionPropose(regionId);
 
         ACLMessage reply = createReply(msg, ACLMessage.INFORM,  null);
         send(reply);
         LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
+    }
+
+    private void sendGarbageCollectionPropose(String regionId) {
+        AID[] bins = AgentUtils.findBins(this, AgentType.GARBAGE_COLLECTOR, regionId);
+        ACLMessage propose = createMessage(ACLMessage.PROPOSE, MessageProtocol.Bin2Beacon_Capacity, bins);
+
+        send(propose);
+        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, propose);
     }
 }

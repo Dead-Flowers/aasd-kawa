@@ -11,13 +11,17 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import pl.smartbin.utils.AgentUtils;
+import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
-import java.util.UUID;
+import java.util.Random;
+
+import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class BinAgent extends Agent {
 
-    private Integer usedCapacityPercent = 52;
+    private Integer usedCapacityPercent = 0;
 
     private String regionId;
     private AID beaconAID;
@@ -36,20 +40,9 @@ public class BinAgent extends Agent {
     protected void setup() {
         System.out.println("Setting up '" + getAID().getName() + "'");
         this.regionId = (String) this.getArguments()[0];
+        this.usedCapacityPercent = (new Random()).nextInt(0, 100);
 
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("bin");
-        sd.setName("BinAgent_" + UUID.randomUUID());
-
-        dfd.addServices(sd);
-        try {
-            DFService.register(this, dfd);
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
-
+        AgentUtils.registerAgent(this, AgentType.BIN, AgentUtils.getRegionProp(regionId));
 
         var discoveryBh = new TickerBehaviour(this, 1000) {
             @Override
@@ -76,17 +69,22 @@ public class BinAgent extends Agent {
             }
         };
 
-        var informCapacityBh = new TickerBehaviour(this, 1000) {
+        var increaseUsedCapacityRandomlyBh = new TickerBehaviour(this, 2000) {
             @Override
             protected void onTick() {
-                if (beaconAID == null) {
-                    return;
-                }
-                send(MessageUtils.createMessage(ACLMessage.INFORM, MessageProtocol.Bin2Beacon_Capacity, usedCapacityPercent.toString(), beaconAID));
+                int increaseBy = (new Random()).nextInt(0, 2);
+                usedCapacityPercent = Math.min(100, usedCapacityPercent + increaseBy);
             }
         };
 
-        Behaviour bh2 = new CyclicBehaviour(this) {
+        var informCapacityBh = new TickerBehaviour(this, 1000) {
+            @Override
+            protected void onTick() {
+                sendUpdateStatusForCapacity();
+            }
+        };
+
+        Behaviour messageRetrievalBh = new CyclicBehaviour(this) {
 
             public void action() {
                 ACLMessage msg = receive();
@@ -95,29 +93,8 @@ public class BinAgent extends Agent {
                     return;
                 }
                 switch (msg.getPerformative()) {
-
-                    case ACLMessage.ACCEPT_PROPOSAL:
-                        System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.REJECT_PROPOSAL:
-                        System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.INFORM:
-                        System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.CONFIRM:
-                        System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + msg.getSender().getName() + "]");
-                        break;
-
-                    case ACLMessage.QUERY_REF:
-                        String cont = "My current used capacity: " + usedCapacityPercent;
-                        send(getResponse(msg, ACLMessage.INFORM, cont));
-                        MainApplication.updateBinState(getAID().getLocalName(), usedCapacityPercent);
-                        System.out.println(getAID().getName() + ": " + cont + " [REPLY to " + msg.getSender().getName() + "]");
-                        break;
+                    case ACLMessage.INFORM -> handleInform(msg);
+                    case ACLMessage.PROPOSE -> handlePropose(msg);
                 }
             }
 
@@ -125,6 +102,36 @@ public class BinAgent extends Agent {
 
         addBehaviour(discoveryBh);
         addBehaviour(informCapacityBh);
-        addBehaviour(bh2);
+        addBehaviour(messageRetrievalBh);
+        addBehaviour(increaseUsedCapacityRandomlyBh);
+    }
+
+    private void handlePropose(ACLMessage msg) {
+        logReceiveMsg(AgentType.GARBAGE_COLLECTOR, getName(), msg);
+
+        int decision;
+        if (usedCapacityPercent >= 50) {
+            decision = ACLMessage.ACCEPT_PROPOSAL;
+        } else {
+            decision = ACLMessage.REJECT_PROPOSAL;
+        }
+        LoggingUtils.log(AgentType.BIN, getName(), "decision " + decision);
+
+        msg.createReply();
+        send(MessageUtils.createReply(msg, decision, MessageProtocol.Bin2GarbageCollector ,null));
+    }
+
+    private void handleInform(ACLMessage msg) {
+        logReceiveMsg(AgentType.GARBAGE_COLLECTOR, getName(), msg);
+        LoggingUtils.log(AgentType.BIN, getName(), "emptying capacity");
+        usedCapacityPercent = 0;
+        sendUpdateStatusForCapacity();
+    }
+
+    private void sendUpdateStatusForCapacity() {
+        if (beaconAID == null) {
+            return;
+        }
+        send(MessageUtils.createMessage(ACLMessage.INFORM, MessageProtocol.Bin2Beacon_Capacity, usedCapacityPercent.toString(), beaconAID));
     }
 }

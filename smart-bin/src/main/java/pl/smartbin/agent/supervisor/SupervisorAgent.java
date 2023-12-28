@@ -2,7 +2,7 @@ package pl.smartbin.agent.supervisor;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.*;
+import jade.core.behaviours.TickerBehaviour;
 import lombok.Getter;
 import lombok.Setter;
 import pl.smartbin.AgentType;
@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SupervisorAgent extends Agent {
 
+    @Getter
     private String region;
 
     @Getter

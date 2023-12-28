@@ -10,13 +10,12 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import pl.smartbin.utils.JsonUtils;
+import pl.smartbin.utils.MessageUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import pl.smartbin.utils.JsonUtils;
-import pl.smartbin.utils.MessageUtils;
 
 import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 

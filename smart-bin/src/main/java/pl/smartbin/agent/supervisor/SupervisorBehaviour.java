@@ -5,27 +5,20 @@ import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.proto.ContractNetInitiator;
 import pl.smartbin.AgentType;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
-import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static pl.smartbin.utils.LoggingUtils.*;
-import static pl.smartbin.utils.LoggingUtils.log;
 
 public class SupervisorBehaviour extends FSMBehaviour {
 

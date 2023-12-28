@@ -1,7 +1,5 @@
 package pl.smartbin.agent.supervisor;
 
-import jade.core.AID;
-import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 import pl.smartbin.AgentType;
@@ -11,14 +9,17 @@ import java.util.List;
 import java.util.Vector;
 import java.util.function.Supplier;
 
-import static pl.smartbin.utils.LoggingUtils.*;
+import static pl.smartbin.utils.LoggingUtils.log;
+import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
 
+    private final SupervisorAgent agent;
     private final Supplier<List<Integer>> binCapacitiesSupplier;
 
-    public GarbageCollectionAuctionInitiator(Agent a, ACLMessage cfp, Supplier<List<Integer>> binCapacitiesSupplier) {
+    public GarbageCollectionAuctionInitiator(SupervisorAgent a, ACLMessage cfp, Supplier<List<Integer>> binCapacitiesSupplier) {
         super(a, cfp);
+        this.agent = a;
         this.binCapacitiesSupplier = binCapacitiesSupplier;
     }
 
@@ -51,6 +52,7 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
 
                 if (bestOffer == null) {
                     reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                    reply.setContent(agent.getRegion());
                     bestOffer = reply;
                 }
 

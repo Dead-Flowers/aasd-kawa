@@ -73,6 +73,26 @@ public class AgentUtils {
         return new AID[0];
     }
 
+    public static AID[] findBins(Agent caller, AgentType callerType, String region) {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription serviceDescription = new ServiceDescription();
+        serviceDescription.setType(AgentType.BIN.getCode());
+        serviceDescription.addProperties(getRegionProp(region));
+        template.addServices(serviceDescription);
+        try {
+            DFAgentDescription[] result = DFService.search(caller, template);
+            System.out.printf("[%s %s] Found %d bins\n", callerType.getCode(), caller.getName(), result.length);
+
+            return Arrays.stream(result)
+                         .map(DFAgentDescription::getName)
+                         .toArray(AID[]::new);
+        } catch (FIPAException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public static Property getRegionProp(String region) {
         var prop = new Property();
         prop.setName("region_id");

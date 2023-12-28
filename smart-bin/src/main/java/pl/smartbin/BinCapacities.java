@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public class BinCapacities implements Serializable {
 
