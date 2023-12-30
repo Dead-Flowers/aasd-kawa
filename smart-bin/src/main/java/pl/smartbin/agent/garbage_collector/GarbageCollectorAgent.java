@@ -1,29 +1,40 @@
 package pl.smartbin.agent.garbage_collector;
 
+import com.google.gson.reflect.TypeToken;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.Location;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.*;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
+import jade.proto.ProposeInitiator;
 import pl.smartbin.AgentType;
 import pl.smartbin.MessageProtocol;
+import pl.smartbin.dto.BinData;
 import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
+import pl.smartbin.utils.MessageUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static pl.smartbin.utils.MessageUtils.createMessage;
-import static pl.smartbin.utils.MessageUtils.createReply;
 
 public class GarbageCollectorAgent extends Agent {
 
-    private List<AID> beaconAgents = new ArrayList<>();
+    public static class States {
+        public static final String INITIAL = "Initial";
+        public static final String WAIT_SCHEDULE = "Wait-Schedule";
+        public static final String BIN_PROPOSE = "Bin-propose";
+        public static final String BIN_CLEAN = "Bin-clean";
+        public static final String CFP = "Cfp";
+        public static final String FINAL = "Finalee";
+    }
 
-    private GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
+    private final List<AID> beaconAgents = new ArrayList<>();
+    private final DataStore cfpBhStore = new DataStore();
+    private final DataStore binProposeStore = new DataStore();
+
+    private final GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
 
 
     protected void setup() {
@@ -31,120 +42,92 @@ public class GarbageCollectorAgent extends Agent {
 
         AgentUtils.registerAgent(this, AgentType.GARBAGE_COLLECTOR);
 
-//        Behaviour bh1 = new TickerBehaviour(this, 2000) {
-//            public void onTick() {
-//                if (beaconAgents.isEmpty()) {
-//                    DFAgentDescription template = new DFAgentDescription();
-//                    ServiceDescription serviceDescription = new ServiceDescription();
-//                    serviceDescription.setType("beacon");
-//                    template.addServices(serviceDescription);
-//                    try {
-//                        DFAgentDescription[] result = DFService.search(myAgent, template);
-//                        for (DFAgentDescription dfAgentDescription : result) {
-//                            beaconAgents.add(dfAgentDescription.getName());
-//                        }
-//                    } catch (FIPAException e) {
-//                        e.printStackTrace();
-//                    }
-//                } else {
-//                    for (AID beaconAgent : beaconAgents) {
-//                        ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-//                        msg.setLanguage("English");
-//                        msg.setOntology("test-ontology");
-//                        msg.addReceiver(beaconAgent);
-//                        String cont = "Do you have trash?";
-//                        msg.setContent(cont);
-//                        System.out.println(getAID().getName() + ": " + cont + " [to " + beaconAgent.getName() + "]");
-//                        send(msg);
-//                    }
-//                }
-//            }
-//        };
-//
-//        addBehaviour(bh1);
+        var fsmBehavior = new FSMBehaviour(this);
 
-        Behaviour bh2 = new CyclicBehaviour(this) {
+        var gcBh = new GarbageCollectorCfpBehaviour(this, () -> currentLocation);
+        gcBh.setDataStore(cfpBhStore);
 
-            public void action() {
+        var binProposeBh = new ProposeInitiator(this, null, binProposeStore) {
 
-                ACLMessage rep = receive();
-                Location loc;
-                // TODO: blocking receive
-                if (rep != null) {
+            HashMap<AID, ACLMessage> acceptedBins;
+            HashMap<AID, BinData> allBins;
 
-                    switch (rep.getPerformative()) {
-
-                        case ACLMessage.CFP:
-                            System.out.println(getAID().getName() + ": " + " received: call for proposal " + " [IN from + " + rep.getSender().getName() + "]");
-                            handleCfp(rep);
-                            break;
-
-                        case ACLMessage.ACCEPT_PROPOSAL:
-                            System.out.println(getAID().getName() + ": " + " received: accept proposal " + " [IN from + " + rep.getSender().getName() + "]");
-                            handleAcceptProposal(rep);
-                            break;
-
-                        case ACLMessage.REJECT_PROPOSAL:
-                            System.out.println(getAID().getName() + ": " + " received: reject proposal " + " [IN from + " + rep.getSender().getName() + "]");
-                            break;
-
-                        case ACLMessage.INFORM:
-                            System.out.println(getAID().getName() + ": " + " received: inform " + " [IN from + " + rep.getSender().getName() + "]");
-                            break;
-
-                        case ACLMessage.CONFIRM:
-                            System.out.println(getAID().getName() + ": " + " received: confirm " + " [IN from + " + rep.getSender().getName() + "]");
-                            currentLocation.setLatitude(new Random().nextFloat(0, 100));
-                            currentLocation.setLongitude(new Random().nextFloat(0, 100));
-//                            MainApplication.updateGarbageCollectorLocation(getAID().getLocalName(), currentLocation);
-                            break;
-                    }
-                } else block();
+            @Override
+            public void onStart() {
+                super.onStart();
             }
 
+            @Override
+            protected Vector prepareInitiations(ACLMessage propose) {
+                acceptedBins = new HashMap<>();
+                var msg = gcBh.getResult().cfp;
+                allBins = JsonUtils.fromJson(msg.getContent(), new TypeToken<HashMap<AID, BinData>>() {
+                }.getType());
+                var bins = allBins.keySet().toArray(new AID[0]);
+                propose = createMessage(ACLMessage.PROPOSE, FIPANames.InteractionProtocol.FIPA_PROPOSE, bins);
+                //getDataStore().put(INITIATION_K, propose);
+                return super.prepareInitiations(propose);
+            }
+
+            @Override
+            protected void handleAcceptProposal(ACLMessage accept_proposal) {
+                acceptedBins.put(accept_proposal.getSender(), accept_proposal);
+            }
         };
-        bh2.reset();
 
-//        Behaviour bh2 = new GarbageCollectorBehaviour(this, () -> currentLocation);
-//
-        addBehaviour(bh2);
+        var binCleanBh = new SimpleBehaviour(this) {
+            @Override
+            public void action() {
+                // TODO: simulate something..
+                var binEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst();
+                binEntry.ifPresent(x -> {
+                    var reply = MessageUtils.createReply(x.getValue(), ACLMessage.INFORM, MessageProtocol.Bin2GarbageCollector, null);
+                    send(reply);
+                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Emptying bin: " + x.getKey().getLocalName());
+                    LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
+                    binProposeBh.acceptedBins.remove(x.getKey());
+                });
+            }
+
+            @Override
+            public boolean done() {
+                return binProposeBh.acceptedBins.isEmpty();
+            }
+        };
+
+
+        fsmBehavior.registerFirstState(new OneShotBehaviour(this) {
+            @Override
+            public void action() {
+
+            }
+        }, States.INITIAL);
+        fsmBehavior.registerState(new WakerBehaviour(this, 5000) {
+        }, States.WAIT_SCHEDULE);
+
+        var finalBh = new OneShotBehaviour(this) {
+            @Override
+            public void action() {
+                // garbage collection completed, we should probably INFORM here
+            }
+        };
+
+        fsmBehavior.registerState(gcBh, States.CFP);
+        fsmBehavior.registerState(binProposeBh, States.BIN_PROPOSE);
+        fsmBehavior.registerState(binCleanBh, States.BIN_CLEAN);
+        fsmBehavior.registerState(finalBh, States.FINAL);
+
+        fsmBehavior.registerDefaultTransition(States.INITIAL, States.WAIT_SCHEDULE);
+        fsmBehavior.registerDefaultTransition(States.WAIT_SCHEDULE, States.CFP);
+        fsmBehavior.registerTransition(States.CFP, States.BIN_PROPOSE, 1);
+        fsmBehavior.registerTransition(States.CFP, States.WAIT_SCHEDULE, 0, new String[]{States.WAIT_SCHEDULE, States.CFP});
+        fsmBehavior.registerDefaultTransition(States.BIN_PROPOSE, States.BIN_CLEAN);
+        fsmBehavior.registerDefaultTransition(States.BIN_CLEAN, States.FINAL);
+        fsmBehavior.registerDefaultTransition(States.FINAL, States.WAIT_SCHEDULE, new String[]{States.WAIT_SCHEDULE, States.CFP, States.BIN_PROPOSE, States.BIN_CLEAN, States.FINAL});
+
+
+        addBehaviour(fsmBehavior);
     }
 
-    private void handleCfp(ACLMessage msg) {
-        ACLMessage reply = createReply(msg, ACLMessage.PROPOSE, JsonUtils.toJson(currentLocation));
-        send(reply);
-        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
-    }
 
-    private void handleAcceptProposal(ACLMessage msg) {
-        if (MessageProtocol.Bin2GarbageCollector.equals(msg.getProtocol())) {
-            handleSingleBinGarbageCollection(msg);
-        } else {
-            handleGarbageCollectionProcess(msg);
-        }
-    }
-
-    private void handleSingleBinGarbageCollection(ACLMessage msg) {
-        ACLMessage reply = createReply(msg, ACLMessage.INFORM, null);
-        send(reply);
-        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
-    }
-
-    private void handleGarbageCollectionProcess(ACLMessage msg) {
-        String regionId = msg.getContent();
-        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, getName(), "Starting garbage collection in region: " + regionId);
-        sendGarbageCollectionPropose(regionId);
-
-        ACLMessage reply = createReply(msg, ACLMessage.INFORM,  null);
-        send(reply);
-        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
-    }
-
-    private void sendGarbageCollectionPropose(String regionId) {
-        AID[] bins = AgentUtils.findBins(this, AgentType.GARBAGE_COLLECTOR, regionId);
-        ACLMessage propose = createMessage(ACLMessage.PROPOSE, MessageProtocol.Bin2Beacon_Capacity, bins);
-
-        send(propose);
-        LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, propose);
-    }
 }

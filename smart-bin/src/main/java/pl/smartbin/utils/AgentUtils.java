@@ -21,13 +21,12 @@ public class AgentUtils {
         sd.setName(agent.getAID().getName());
 
         Arrays.stream(properties)
-              .forEach(sd::addProperties);
+                .forEach(sd::addProperties);
 
         dfd.addServices(sd);
         try {
             DFService.register(agent, dfd);
-        }
-        catch(FIPAException fe) {
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
@@ -44,7 +43,7 @@ public class AgentUtils {
             if (result.length == 1) {
                 AID beaconAID = result[0].getName();
                 System.out.printf("[%s %s] Found beacon %s\n", callerType.getCode(), caller.getName(),
-                                  beaconAID.getName());
+                        beaconAID.getName());
                 return beaconAID;
             }
         } catch (FIPAException e) {
@@ -64,8 +63,8 @@ public class AgentUtils {
             System.out.printf("[%s %s] Found %d garbage collectors\n", callerType.getCode(), caller.getName(), result.length);
 
             return Arrays.stream(result)
-                         .map(DFAgentDescription::getName)
-                         .toArray(AID[]::new);
+                    .map(DFAgentDescription::getName)
+                    .toArray(AID[]::new);
         } catch (FIPAException e) {
             e.printStackTrace();
         }
@@ -84,8 +83,8 @@ public class AgentUtils {
             System.out.printf("[%s %s] Found %d bins\n", callerType.getCode(), caller.getName(), result.length);
 
             return Arrays.stream(result)
-                         .map(DFAgentDescription::getName)
-                         .toArray(AID[]::new);
+                    .map(DFAgentDescription::getName)
+                    .toArray(AID[]::new);
         } catch (FIPAException e) {
             e.printStackTrace();
         }

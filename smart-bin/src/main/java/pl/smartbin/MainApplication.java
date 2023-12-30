@@ -5,6 +5,7 @@ import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 import pl.smartbin.agent.garbage_collector.GarbageCollector;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
@@ -26,7 +27,7 @@ public class MainApplication {
     private static Map<String, JLabel> binStates;
     private static AgentContainer container;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ControllerException {
         // -gui -name TEST
         Runtime runtime = Runtime.instance();
         Profile profile = new ProfileImpl();
@@ -36,17 +37,18 @@ public class MainApplication {
         profile.setParameter(Profile.PLATFORM_ID, "MyPlatform");
         container = runtime.createMainContainer(profile);
 
-        for (int i = 1; i < 5; i++) {
+
+        for (int i = 0; i < 2; i++) {
             try {
                 container.createNewAgent("GarbageCollector " + i, "pl.smartbin.agent.garbage_collector.GarbageCollectorAgent", null)
-                         .start();
+                        .start();
             } catch (StaleProxyException e) {
                 e.printStackTrace();
             }
         }
 
         binStates = new HashMap<>();
-        for (int i = 1; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             try {
                 var agent = container.createNewAgent("Bin " + i, "pl.smartbin.BinAgent", new Object[]{String.valueOf(i % 2)});
                 agent.start();
@@ -62,7 +64,7 @@ public class MainApplication {
             try {
                 Object[] agentArgs = new Object[]{i.toString()};
                 container.createNewAgent("Beacon " + i, "pl.smartbin.BeaconAgent", agentArgs)
-                         .start();
+                        .start();
                 container.createNewAgent("Supervisor " + i, SupervisorAgent.class.getName(), agentArgs)
                         .start();
             } catch (StaleProxyException e) {
@@ -90,7 +92,7 @@ public class MainApplication {
 
         var binNames = binStates.keySet().stream().sorted().toList();
 
-        for(var key : binNames) {
+        for (var key : binNames) {
             box.add(binStates.get(key));
         }
 

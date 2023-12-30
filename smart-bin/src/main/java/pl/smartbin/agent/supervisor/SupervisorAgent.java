@@ -2,7 +2,9 @@ package pl.smartbin.agent.supervisor;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import lombok.Getter;
 import lombok.Setter;
 import pl.smartbin.AgentType;
@@ -37,21 +39,20 @@ public class SupervisorAgent extends Agent {
             }
         };
 
-        var collectionStartBh = new TickerBehaviour(this, TimeUnit.SECONDS.toMillis(2)) {
+        var supervisorBh = new SupervisorBehaviour(this);
 
-            @Override
-            protected void onTick() {
-                System.out.println("In progress: " + inProgress);
-                if (beaconAID == null || inProgress) {
-                    return;
-                }
-                inProgress = true;
-                addBehaviour(new SupervisorBehaviour((SupervisorAgent) myAgent)
-                                     .onBeforeEnd(() -> setInProgress(false)));
-            }
+        var schedulerFsm = new FSMBehaviour(this);
+
+        var schedulerWaitBh = new WakerBehaviour(this, 5000) {
+
         };
+        schedulerFsm.registerFirstState(schedulerWaitBh, "Wait");
+        schedulerFsm.registerState(supervisorBh, "Supervisor");
+
+        schedulerFsm.registerDefaultTransition("Wait", "Supervisor");
+        schedulerFsm.registerDefaultTransition("Supervisor", "Wait", new String[]{"Wait", "Supervisor"});
 
         addBehaviour(discoveryBh);
-        addBehaviour(collectionStartBh);
+        addBehaviour(schedulerFsm);
     }
 }

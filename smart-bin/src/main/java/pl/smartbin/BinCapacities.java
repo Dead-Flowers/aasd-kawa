@@ -10,14 +10,14 @@ import java.util.ArrayList;
 
 public class BinCapacities implements Serializable {
 
-    private ArrayList<BinCapacity> binCapacities = new ArrayList<>();
+    private final ArrayList<BinCapacity> binCapacities = new ArrayList<>();
 
     public void put(AID aid, Integer value) {
         binCapacities.stream()
-                     .filter(bc -> bc.getAid().equals(aid))
-                     .findAny()
-                     .ifPresentOrElse(bc -> bc.setValue(value),
-                                      () -> binCapacities.add(new BinCapacity(aid, value)));
+                .filter(bc -> bc.getAid().equals(aid))
+                .findAny()
+                .ifPresentOrElse(bc -> bc.setValue(value),
+                        () -> binCapacities.add(new BinCapacity(aid, value)));
     }
 
 

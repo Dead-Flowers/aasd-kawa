@@ -20,7 +20,7 @@ public class GarbageCollector implements Serializable {
         this.latitude = latitude;
         this.longitude = longitude;
         Random rand = new Random();
-        this.color =  new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
+        this.color = new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
     }
 
     public float getLatitude() {

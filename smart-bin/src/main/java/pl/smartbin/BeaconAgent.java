@@ -10,37 +10,24 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import pl.smartbin.dto.BinData;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.MessageUtils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class BeaconAgent extends Agent {
+    private final HashMap<AID, BinData> binCapacities = new HashMap<>();
 
-    private List<AID> binAgents = new ArrayList<>();
-    private final HashMap<AID, Integer> binCapacities = new HashMap<>();
-
-    protected ACLMessage getResponse(ACLMessage msg, int perf, String cont) {
-        ACLMessage response = msg.createReply();
-        response.addReplyTo(msg.getSender());
-        response.setLanguage("English");
-        response.setOntology("test-ontology");
-        response.setPerformative(perf);
-        response.setContent(cont);
-        System.out.println(getAID().getName() + ": " + cont);
-        return response;
-    }
 
     private void handleInform(ACLMessage msg) {
         switch (msg.getProtocol()) {
             case MessageProtocol.Bin2Beacon_Capacity:
-                var val = Integer.parseInt(msg.getContent());
+                var val = JsonUtils.fromJson(msg.getContent(), BinData.class);
                 binCapacities.put(msg.getSender(), val);
-                System.out.printf("[Beacon %s] Capacity of %s = %d\n", getName(), msg.getSender().getName(), val);
+                System.out.printf("[Beacon %s] Capacity of %s = %d\n", getName(), msg.getSender().getName(), val.usedCapacityPct);
                 break;
             default:
                 break;
@@ -50,8 +37,7 @@ public class BeaconAgent extends Agent {
     private void handleQueryIf(ACLMessage msg) {
         switch (msg.getProtocol()) {
             case MessageProtocol.Supervisor2Beacon_Capacities:
-                msg.createReply();
-                send(MessageUtils.createReply(msg, ACLMessage.INFORM, JsonUtils.toJson(binCapacities.values())));
+                send(MessageUtils.createReply(msg, ACLMessage.INFORM, JsonUtils.toJson(binCapacities)));
                 break;
             default:
                 break;
@@ -75,8 +61,7 @@ public class BeaconAgent extends Agent {
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
-        }
-        catch(FIPAException fe) {
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
 
@@ -85,10 +70,10 @@ public class BeaconAgent extends Agent {
             public void action() {
 
                 ACLMessage msg = receive();
-                if(msg != null) {
+                if (msg != null) {
                     logReceiveMsg(AgentType.BEACON, getName(), msg);
 
-                    switch(msg.getPerformative()) {
+                    switch (msg.getPerformative()) {
 
                         case ACLMessage.INFORM:
                             handleInform(msg);
@@ -100,31 +85,12 @@ public class BeaconAgent extends Agent {
 
                         case ACLMessage.PROPOSE:
                             System.out.println(getAID().getName() + ": " + msg.getContent() + " [from " + msg.getSender().getName() + "]");
-
-                            for (AID binAgent : binAgents) {
-                                ACLMessage message = new ACLMessage(ACLMessage.QUERY_REF);
-                                message.setLanguage("English");
-                                message.setOntology("test-ontology");
-                                message.addReceiver(binAgent);
-                                String cont = "What is your current used capacity?";
-                                message.setContent(cont);
-                                System.out.println(getAID().getName() + ": " + cont + " [to " + binAgent.getName() + "]");
-                                send(message);
-                            }
-                            // TODO
-                            String cont = "I don't know yet :(";
-
-                            send(getResponse(msg, ACLMessage.CONFIRM, cont));
-                            System.out.println(getAID().getName() + ": " + cont + " [to " + msg.getSender().getName() + "]");
-
                             break;
-
                         case ACLMessage.NOT_UNDERSTOOD:
                             // TODO
                             break;
                     }
-                }
-                else block();
+                } else block();
             }
         };
 

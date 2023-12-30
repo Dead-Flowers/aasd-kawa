@@ -9,59 +9,84 @@ import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetResponder;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
 import pl.smartbin.AgentType;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.function.Supplier;
 
 import static pl.smartbin.utils.MessageUtils.createReply;
 
-public class GarbageCollectorBehaviour extends ContractNetResponder {
+public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
+
+    @Data
+    @AllArgsConstructor
+    public static class Result {
+        ACLMessage cfp;
+        ACLMessage proposal;
+        ACLMessage accepted;
+        ACLMessage rejected;
+    }
 
     public static final String COLLECT_GARBAGE = "Collect-Garbage";
 
+    @Getter
+    private Result result;
+
     private final Supplier<GarbageCollector> locationSupplier;
 
-    public GarbageCollectorBehaviour(Agent a, Supplier<GarbageCollector> locationSupplier) {
+    public GarbageCollectorCfpBehaviour(Agent a, Supplier<GarbageCollector> locationSupplier) {
         super(a, createMessageTemplate(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET));
         this.locationSupplier = locationSupplier;
-
-        deregisterDefaultTransition(HANDLE_ACCEPT_PROPOSAL);
-        registerDefaultTransition(HANDLE_ACCEPT_PROPOSAL, COLLECT_GARBAGE);
-        registerDefaultTransition(COLLECT_GARBAGE, SEND_REPLY);
-        // latitmoże dodać jakieś wyjątkowe stany
-
-        Behaviour b;
-
-        b = new OneShotBehaviour() {
-
+        registerLastState(new OneShotBehaviour(a) {
             @Override
             public void action() {
-                // TODO prawdopodobnie wydzielić do osobnej klasy i dodać całe działanie wywozu śmieci
-                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, a.getName(), "Performing garbage collection");
+                var wasAccepted = result.accepted != null;
+                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "CFP done, accepted: " + wasAccepted);
             }
-        };
-        registerDSState(b, COLLECT_GARBAGE);
+        }, "Final");
+        registerDefaultTransition(DUMMY_FINAL, "Final", new String[]{"Final"});
+    }
+
+    @Override
+    public int onEnd() {
+        return result != null && result.accepted != null ? 1 : 0;
+    }
+
+    @Override
+    protected void handleStateEntered(Behaviour state) {
+        super.handleStateEntered(state);
+        LoggingUtils.logFsmState(this, this.getCurrent());
     }
 
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
         LoggingUtils.logReceiveMsg(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), cfp);
         ACLMessage msg = createReply(cfp, ACLMessage.PROPOSE, JsonUtils.toJson(locationSupplier.get()));
-//        msg.setReplyByDate(Date.from(Instant.now().plusSeconds(10)));
+        msg.setReplyByDate(Date.from(Instant.now().plusSeconds(10)));
         return msg;
+    }
+
+    protected void notifyObserver(ACLMessage cfp, ACLMessage proposal, ACLMessage accepted, ACLMessage rejected) {
+        result = new Result(cfp, proposal, accepted, rejected);
     }
 
     @Override
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
         LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Accept proposal from " + accept.getSender().getName());
+        notifyObserver(cfp, propose, accept, null);
         return MessageUtils.createReply(accept, ACLMessage.INFORM, null);
     }
 
     @Override
     protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
+        notifyObserver(cfp, propose, null, reject);
         if (reject == null || reject.getSender() == null) {
             LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "REJECT!! " + cfp.getSender().getName());
             return;

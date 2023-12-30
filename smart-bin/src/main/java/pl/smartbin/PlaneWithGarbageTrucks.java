@@ -38,8 +38,8 @@ public class PlaneWithGarbageTrucks extends JPanel {
     }
 
     private void drawDot(Graphics g, GarbageCollector collector, String label) {
-        int dotX = (int)(collector.getLatitude() / 100 * getWidth());
-        int dotY = (int)(collector.getLongitude() / 100 * getHeight());
+        int dotX = (int) (collector.getLatitude() / 100 * getWidth());
+        int dotY = (int) (collector.getLongitude() / 100 * getHeight());
 
         g.setColor(collector.getColor());
         g.fillOval(dotX - 5, dotY - 5, 10, 10);

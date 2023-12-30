@@ -8,12 +8,13 @@ public class MessageUtils {
     public static ACLMessage createMessage(int type, String protocol, AID... targets) {
         return createMessage(type, protocol, null, targets);
     }
+
     public static ACLMessage createMessage(int type, String protocol, String message, AID... targets) {
         var msg = new ACLMessage(type);
         msg.setLanguage("English");
         msg.setProtocol(protocol);
         msg.setOntology("test-ontology");
-        for(var target : targets)
+        for (var target : targets)
             msg.addReceiver(target);
         msg.setContent(message);
         return msg;
