@@ -10,7 +10,6 @@ import pl.smartbin.dto.Location;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.util.Random;
 
 public class MainPlane extends JFrame {
     private static final int FRAME_WIDTH = 800;
@@ -91,6 +90,12 @@ public class MainPlane extends JFrame {
             e.printStackTrace();
         }
     }
+
+    public void addNewBin(int ordinalNo, Location location) throws IOException {
+        Object[] agentArgs = new Object[]{String.valueOf(ordinalNo % 2), location};
+        createBin("Bin " + ordinalNo, agentArgs);
+    }
+
 
     public void updateBinFill(String binName, String currentBeaconName, int usedCapacityPct) {
         statsPanel.updateBinStat(binName, usedCapacityPct, currentBeaconName);

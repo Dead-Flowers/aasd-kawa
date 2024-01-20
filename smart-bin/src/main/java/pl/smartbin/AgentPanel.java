@@ -4,7 +4,10 @@ import pl.smartbin.dto.Location;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,12 +16,40 @@ public class AgentPanel extends JPanel {
     private final Map<String, GarbageCollectorOnPlane> trucks;
     private final Map<String, BeaconOnPlane> beacons;
 
+    private MainPlane gui;
+
     public AgentPanel() {
         bins = new HashMap<>();
         trucks = new HashMap<>();
         beacons = new HashMap<>();
+
+        gui = MainPlane.getInstance();
+
         setPreferredSize(new Dimension(600, 400));
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    handleMouseCLick(e);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
         repaint();
+    }
+
+    private void handleMouseCLick(MouseEvent e) throws IOException {
+        if (!e.isControlDown()) return;
+
+        var ordinals = bins.keySet().stream().map(value -> Integer.parseInt(value.split(" ")[1])).toList();
+        int lastBinNo = Collections.max(ordinals);
+        int x = e.getX();
+        int y = e.getY();
+
+        if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
+            gui.addNewBin(lastBinNo + 1, new Location(x*100f / getWidth(),  y*100f /  getHeight()));
+        }
     }
 
     @Override

@@ -44,14 +44,6 @@ public class StatsPanel extends JPanel {
         regenerateTexts();
     }
 
-    public void createNewBin() {
-
-    }
-
-    public void createNewGc() {
-
-    }
-
     public void deleteBin(String name) {
         binStats.remove(name);
         SwingUtilities.invokeLater(() -> gui.deleteBinAgent(name));
