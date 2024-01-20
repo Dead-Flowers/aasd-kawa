@@ -18,6 +18,13 @@ public class GarbageCollectorOnPlane extends ObjectOnPlane {
     private int usedCapacityPct;
     private final Image image;
 
+    public GarbageCollectorOnPlane(Location location, String name, int usedCapacityPct) throws IOException {
+        super(location, name);
+        this.usedCapacityPct = usedCapacityPct;
+        BufferedImage fullRedImage = ImageIO.read(getClass().getResourceAsStream("/images/truck.png"));
+        image = fullRedImage.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_FAST);
+    }
+
     public GarbageCollectorOnPlane(Location location, String name) throws IOException {
         super(location, name);
         this.usedCapacityPct = 0;

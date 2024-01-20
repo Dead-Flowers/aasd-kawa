@@ -5,13 +5,13 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 import pl.smartbin.agent.garbage_collector.GarbageCollectorAgent;
+import pl.smartbin.agent.garbage_collector.GarbageCollectorData;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
+import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,31 +25,64 @@ public class MainPlane extends JFrame {
     private static MainPlane instance;
     private ContainerController container;
     private List<String> garbageCollectors;
+    private List<String> bins;
+    private List<String> beacons;
 
     private AgentPanel mainPanel;
     private StatsPanel statsPanel;
-    private Timer timer;
+    private final Timer timer;
 
     private MainPlane(ContainerController container) {
         this.container = container;
         this.garbageCollectors = new ArrayList<>();
-        timer = new Timer(500, e -> updateGcLocations());
+        this.bins = new ArrayList<>();
+        this.beacons = new ArrayList<>();
+        timer = new Timer(500, e -> getDataFromAllAgents());
         timer.start();
     }
 
-    private void updateGcLocations() {
-        Map<String, Location> newLocations = new HashMap<>();
+    private void getDataFromAllAgents() {
+        Map<String, GarbageCollectorData> newGcData = new HashMap<>();
         for(String gcName: garbageCollectors) {
             try {
                 AgentController agent = container.getAgent(gcName);
                 var binAgentInterface = agent.getO2AInterface(IGarbageCollectorAgent.class);
-                Location location = binAgentInterface.getCurrentLocation();
-                newLocations.put(gcName, location);
+                GarbageCollectorData data = binAgentInterface.getData();
+                newGcData.put(gcName, data);
             } catch (ControllerException ex) {
                 ex.printStackTrace();
             }
         }
-        updateTrucksLocations(newLocations);
+        Map<String, BinData> newBinData = new HashMap<>();
+        Map<String, String> beaconMapping = new HashMap<>();
+        for(String binName: bins) {
+            try {
+                AgentController agent = container.getAgent(binName);
+                var binAgentInterface = agent.getO2AInterface(IBinAgent.class);
+                BinData data = binAgentInterface.getData();
+                newBinData.put(binName, data);
+                String beacon = binAgentInterface.getCurrentBeacon();
+                beaconMapping.put(binName, beacon != null ? beacon : "");
+            } catch (ControllerException ex) {
+                ex.printStackTrace();
+            }
+        }
+        Map<String, Location> newBeaconData = new HashMap<>();
+        for(String beaconName: beacons) {
+            try {
+                AgentController agent = container.getAgent(beaconName);
+                var beaconAgentInterface = agent.getO2AInterface(IBeaconAgent.class);
+                Location data = beaconAgentInterface.getLocation();
+                newBeaconData.put(beaconName, data);
+            } catch (ControllerException ex) {
+                ex.printStackTrace();
+            }
+        }
+        try {
+            updateDisplayedData(newGcData, newBinData, newBeaconData, beaconMapping);
+        } catch (IOException ex) {
+
+        }
     }
 
     public static MainPlane getInstance() {
@@ -68,14 +101,12 @@ public class MainPlane extends JFrame {
 
     public void createBin(String name, Object[] args) throws IOException {
         createAgent(name, BinAgent.class.getName(), args);
-        Location location = (Location) args[1];
-        mainPanel.addBin(name, location);
+        bins.add(name);
     }
 
     public void createBeacon(String name, Object[] args) throws IOException {
         createAgent(name, BeaconAgent.class.getName(), args);
-        Location location = (Location) args[1];
-        mainPanel.addBeacon(name, location);
+        beacons.add(name);
     }
 
     public void createSupervisor(String name, Object[] args) throws IOException {
@@ -85,8 +116,6 @@ public class MainPlane extends JFrame {
     public void createGarbageCollector(String name, Object[] args) throws IOException {
         createAgent(name, GarbageCollectorAgent.class.getName(), args);
         garbageCollectors.add(name);
-        Location location = (Location) args[0];
-        mainPanel.addGarbageCollector(name, location);
     }
 
     public void createAgent(String agentName, String agentClass, Object[] args) {
@@ -100,16 +129,17 @@ public class MainPlane extends JFrame {
 
     public void deleteBinAgent(String name) {
         this.deleteAgent(name);
-        mainPanel.removeBin(name);
+        bins.remove(name);
     }
 
     public void deleteGarbageCollectorAgent(String name) {
         this.deleteAgent(name);
-        mainPanel.removeGarbageTruck(name);
+        bins.remove(name);
     }
 
     public void deleteBeaconAgent(String name) {
         this.deleteAgent(name);
+        beacons.remove(name);
     }
 
     public void deleteAgent(String agentName) {
@@ -126,21 +156,14 @@ public class MainPlane extends JFrame {
         createBin("Bin " + ordinalNo, agentArgs);
     }
 
-
-    public void updateBinFill(String binName, String currentBeaconName, int usedCapacityPct) {
-        statsPanel.updateBinStat(binName, usedCapacityPct, currentBeaconName);
-    }
-
-    public void updateGcFill(String gcName, int usedCapacityPct) {
-        statsPanel.updateGcStat(gcName, usedCapacityPct);
-    }
-
-    public void updateBeaconOnline(String beaconName) {
-        statsPanel.updateBeaconSet(beaconName);
-    }
-
-    public void updateTrucksLocations(Map<String, Location> newLocations) {
-        mainPanel.updateGcLocations(newLocations);
+    public void updateDisplayedData(
+            Map<String, GarbageCollectorData> newGcData,
+            Map<String, BinData> newBinData,
+            Map<String, Location> newBeaconData,
+            Map<String, String> beaconMapping
+    ) throws IOException {
+        mainPanel.updateData(newGcData, newBinData, newBeaconData);
+        statsPanel.updateAll(newBinData, newGcData, newBeaconData.keySet(), beaconMapping);
     }
 
     public void overrideBinUsedCapacity(String binName, int newValue) {

@@ -1,6 +1,10 @@
 package pl.smartbin;
 
 
+import pl.smartbin.agent.garbage_collector.GarbageCollectorData;
+import pl.smartbin.dto.BinData;
+import pl.smartbin.dto.Location;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -8,11 +12,11 @@ import java.util.*;
 
 public class StatsPanel extends JPanel {
 
-    record BeaconStat(int value, String beaconName) { }
+    public record BeaconStat(int value, String beaconName) { }
 
-    private final Map<String, BeaconStat> binStats;
-    private final Map<String, Integer> garbageCollectorStats;
-    private final Set<String> beaconsOnline;
+    private Map<String, BeaconStat> binStats;
+    private Map<String, Integer> garbageCollectorStats;
+    private Set<String> beaconsOnline;
 
     private final MainPlane gui;
 
@@ -41,6 +45,27 @@ public class StatsPanel extends JPanel {
 
     public void updateBeaconSet(String beaconName) {
         beaconsOnline.add(beaconName);
+        regenerateTexts();
+    }
+
+    public void updateAll(Map<String, BeaconStat> binStats, Map<String, Integer> gcStats, Set<String> beaconsOnline) {
+        this.binStats = binStats;
+        this.garbageCollectorStats = gcStats;
+        this.beaconsOnline = beaconsOnline;
+        regenerateTexts();
+    }
+
+    public void updateAll(Map<String, BinData> binStats, Map<String, GarbageCollectorData> gcStats, Set<String> beaconsOnline, Map<String, String> beaconMapping) {
+        this.binStats.clear();
+        this.garbageCollectorStats.clear();
+        this.beaconsOnline.clear();
+        for(var entry: binStats.entrySet()) {
+            this.binStats.put(entry.getKey(), new BeaconStat(entry.getValue().usedCapacityPct, beaconMapping.get(entry.getKey())));
+        }
+        for(var entry: gcStats.entrySet()) {
+            this.garbageCollectorStats.put(entry.getKey(), entry.getValue().getUsedCapacity());
+        }
+        this.beaconsOnline = beaconsOnline;
         regenerateTexts();
     }
 

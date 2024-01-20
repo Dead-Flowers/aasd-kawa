@@ -20,11 +20,15 @@ import java.util.HashMap;
 
 import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
-public class BeaconAgent extends Agent {
+public class BeaconAgent extends Agent implements IBeaconAgent{
     private final HashMap<AID, BinData> binCapacities = new HashMap<>();
     private Location location;
     private MainPlane gui;
 
+    public BeaconAgent() {
+        super();
+        this.registerO2AInterface(IBeaconAgent.class, this);
+    }
 
     private void handleInform(ACLMessage msg) {
         switch (msg.getProtocol()) {
@@ -76,7 +80,6 @@ public class BeaconAgent extends Agent {
 
             public void action() {
 
-                SwingUtilities.invokeLater(() -> gui.updateBeaconOnline(getLocalName()));
                 ACLMessage msg = receive();
                 if (msg != null) {
                     logReceiveMsg(AgentType.BEACON, getName(), msg);
@@ -103,5 +106,10 @@ public class BeaconAgent extends Agent {
         };
 
         addBehaviour(b);
+    }
+
+    @Override
+    public Location getLocation() {
+        return location;
     }
 }

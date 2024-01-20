@@ -27,4 +27,11 @@ public class BinOnPlane extends ObjectOnPlane{
         BufferedImage fullRedImage = ImageIO.read(getClass().getResourceAsStream("/images/bin.png"));
         image = fullRedImage.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_FAST);
     }
+
+    public BinOnPlane(Location location, String name, int usedCapacityPct) throws IOException {
+        super(location, name);
+        this.usedCapacityPct = usedCapacityPct;
+        BufferedImage fullRedImage = ImageIO.read(getClass().getResourceAsStream("/images/bin.png"));
+        image = fullRedImage.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_FAST);
+    }
 }

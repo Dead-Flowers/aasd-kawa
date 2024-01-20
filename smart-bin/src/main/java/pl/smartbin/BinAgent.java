@@ -77,7 +77,6 @@ public class BinAgent extends Agent implements IBinAgent {
             protected void onTick() {
                 int increaseBy = (new Random()).nextInt(0, 2);
                 state.usedCapacityPct = Math.min(100, state.usedCapacityPct + increaseBy);
-                SwingUtilities.invokeLater(() -> gui.updateBinFill(getLocalName(), beaconAID.getLocalName(), state.usedCapacityPct));
 
             }
         };
@@ -128,7 +127,19 @@ public class BinAgent extends Agent implements IBinAgent {
     public void overrideUsedCapacityPct(int newValue) {
         this.state.usedCapacityPct = newValue;
         sendUpdateStatusForCapacity();
-        SwingUtilities.invokeLater(() -> gui.updateBinFill(getLocalName(), beaconAID.getLocalName(), newValue));
+    }
+
+    @Override
+    public BinData getData() {
+        return state;
+    }
+
+    @Override
+    public String getCurrentBeacon() {
+        if (this.beaconAID != null) {
+            return this.beaconAID.getLocalName();
+        }
+        return null;
     }
 
     private void handleInform(ACLMessage msg) {

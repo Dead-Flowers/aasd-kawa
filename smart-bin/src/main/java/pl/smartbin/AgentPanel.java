@@ -1,5 +1,7 @@
 package pl.smartbin;
 
+import pl.smartbin.agent.garbage_collector.GarbageCollectorData;
+import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
 
 import javax.swing.*;
@@ -128,10 +130,28 @@ public class AgentPanel extends JPanel {
         }
     }
 
-    public void updateGcLocations(Map<String, Location> newLocations) {
-        for(var entry : newLocations.entrySet()) {
-            trucks.get(entry.getKey()).location = entry.getValue();
+    public void updateGcs(Map<String, GarbageCollectorData> newData) throws IOException {
+        for(var entry : newData.entrySet()) {
+            trucks.put(entry.getKey(), new GarbageCollectorOnPlane(entry.getValue().getLocation(), entry.getKey(), entry.getValue().getUsedCapacity()));
         }
+    }
+
+    public void updateBins(Map<String, BinData> newData) throws IOException {
+        for(var entry : newData.entrySet()) {
+            bins.put(entry.getKey(), new BinOnPlane(entry.getValue().location, entry.getKey(), entry.getValue().usedCapacityPct));
+        }
+    }
+
+    public void updateBeacons(Map<String, Location> newData) throws IOException {
+        for(var entry : newData.entrySet()) {
+            beacons.put(entry.getKey(), new BeaconOnPlane(entry.getValue(), entry.getKey()));
+        }
+    }
+
+    public void updateData(Map<String, GarbageCollectorData> gcData, Map<String, BinData> binData, Map<String, Location> beaconData) throws IOException {
+        updateGcs(gcData);
+        updateBins(binData);
+        updateBeacons(beaconData);
         repaint();
     }
 

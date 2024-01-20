@@ -34,6 +34,11 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
         return state.getLocation();
     }
 
+    @Override
+    public GarbageCollectorData getData() {
+        return state;
+    }
+
     public static class States {
         public static final String INITIAL = "Initial";
         public static final String WAIT_SCHEDULE = "Wait-Schedule";
