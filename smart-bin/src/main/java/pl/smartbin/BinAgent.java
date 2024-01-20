@@ -35,11 +35,11 @@ public class BinAgent extends Agent {
     protected void setup() {
         gui = MainPlane.getInstance();
 
-        state = new BinData(new Location(0, 0), new Random().nextInt(47, 49));
 
         System.out.println("Setting up '" + getAID().getName() + "'");
         this.regionId = (String) this.getArguments()[0];
         this.location = (Location) this.getArguments()[1];
+        state = new BinData(location, new Random().nextInt(0, 40));
         AgentUtils.registerAgent(this, AgentType.BIN, AgentUtils.getRegionProp(regionId));
 
         var discoveryBh = new TickerBehaviour(this, 1000) {
@@ -123,7 +123,7 @@ public class BinAgent extends Agent {
     private void handleInform(ACLMessage msg) {
         logReceiveMsg(AgentType.GARBAGE_COLLECTOR, getName(), msg);
         LoggingUtils.log(AgentType.BIN, getName(), "emptying capacity");
-        state.usedCapacityPct = new Random().nextInt(45, 47);
+        state.usedCapacityPct = 0;
         sendUpdateStatusForCapacity();
     }
 
