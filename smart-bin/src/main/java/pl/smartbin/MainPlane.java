@@ -1,5 +1,6 @@
 package pl.smartbin;
 
+import jade.core.Agent;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
@@ -23,8 +24,6 @@ public class MainPlane extends JFrame {
 
     private MainPlane(ContainerController container) {
         this.container = container;
-
-//        this.generateGui();
     }
 
     public static MainPlane getInstance() {
@@ -101,8 +100,22 @@ public class MainPlane extends JFrame {
         statsPanel.updateBinStat(binName, usedCapacityPct, currentBeaconName);
     }
 
+    public void updateGcFill(String gcName, int usedCapacityPct) {
+        statsPanel.updateGcStat(gcName, usedCapacityPct);
+    }
+
     public void updateBeaconOnline(String beaconName) {
         statsPanel.updateBeaconSet(beaconName);
+    }
+
+    public void overrideBinUsedCapacity(String binName, int newValue) {
+        try {
+            AgentController agent = container.getAgent(binName);
+            var binAgentInterface = agent.getO2AInterface(IBinAgent.class);
+            binAgentInterface.overrideUsedCapacityPct(newValue);
+        } catch (ControllerException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void generateGui() {

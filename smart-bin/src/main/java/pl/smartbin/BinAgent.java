@@ -24,13 +24,18 @@ import java.util.Random;
 
 import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
-public class BinAgent extends Agent {
+public class BinAgent extends Agent implements IBinAgent {
 
     private BinData state;
     private String regionId;
     private Location location;
     private AID beaconAID;
     private MainPlane gui;
+
+    public BinAgent() {
+        super();
+        this.registerO2AInterface(IBinAgent.class, this);
+    }
 
     protected void setup() {
         gui = MainPlane.getInstance();
@@ -96,7 +101,6 @@ public class BinAgent extends Agent {
                     handleInform(msg);
                 }
             }
-
         };
 
         addBehaviour(new ProposeResponder(this, MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE)) {
@@ -119,6 +123,11 @@ public class BinAgent extends Agent {
         addBehaviour(increaseUsedCapacityRandomlyBh);
     }
 
+    public void overrideUsedCapacityPct(int newValue) {
+        this.state.usedCapacityPct = newValue;
+        sendUpdateStatusForCapacity();
+        SwingUtilities.invokeLater(() -> gui.updateBinFill(getLocalName(), beaconAID.getLocalName(), newValue));
+    }
 
     private void handleInform(ACLMessage msg) {
         logReceiveMsg(AgentType.GARBAGE_COLLECTOR, getName(), msg);
