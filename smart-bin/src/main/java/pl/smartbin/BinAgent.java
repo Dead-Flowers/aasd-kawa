@@ -19,6 +19,7 @@ import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
+import javax.swing.*;
 import java.util.Random;
 
 import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
@@ -28,8 +29,11 @@ public class BinAgent extends Agent {
     private BinData state;
     private String regionId;
     private AID beaconAID;
+    private MainPlane gui;
 
     protected void setup() {
+        gui = MainPlane.getInstance();
+
         state = new BinData(new Location(0, 0), new Random().nextInt(47, 49));
 
         System.out.println("Setting up '" + getAID().getName() + "'");
@@ -66,6 +70,8 @@ public class BinAgent extends Agent {
             protected void onTick() {
                 int increaseBy = (new Random()).nextInt(0, 2);
                 state.usedCapacityPct = Math.min(100, state.usedCapacityPct + increaseBy);
+                SwingUtilities.invokeLater(() -> gui.updateBinFill(getLocalName(), beaconAID.getLocalName(), state.usedCapacityPct));
+
             }
         };
 

@@ -14,12 +14,14 @@ import pl.smartbin.dto.BinData;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.MessageUtils;
 
+import javax.swing.*;
 import java.util.HashMap;
 
 import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class BeaconAgent extends Agent {
     private final HashMap<AID, BinData> binCapacities = new HashMap<>();
+    private MainPlane gui;
 
 
     private void handleInform(ACLMessage msg) {
@@ -45,6 +47,7 @@ public class BeaconAgent extends Agent {
     }
 
     protected void setup() {
+        gui = MainPlane.getInstance();
         System.out.println("Setting up '" + getAID().getName() + "'");
 
 
@@ -69,6 +72,7 @@ public class BeaconAgent extends Agent {
 
             public void action() {
 
+                SwingUtilities.invokeLater(() -> gui.updateBeaconOnline(getLocalName()));
                 ACLMessage msg = receive();
                 if (msg != null) {
                     logReceiveMsg(AgentType.BEACON, getName(), msg);

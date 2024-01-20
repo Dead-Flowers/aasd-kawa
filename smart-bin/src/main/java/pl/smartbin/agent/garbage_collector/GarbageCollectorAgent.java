@@ -8,6 +8,7 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ProposeInitiator;
 import pl.smartbin.AgentType;
+import pl.smartbin.GarbageCollector;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.utils.AgentUtils;
