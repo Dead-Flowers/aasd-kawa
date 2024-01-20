@@ -1,5 +1,7 @@
 package pl.smartbin;
 
+import jade.core.AID;
+import jade.core.NameClashException;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
@@ -9,6 +11,7 @@ import pl.smartbin.agent.garbage_collector.GarbageCollectorData;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
+import pl.smartbin.utils.LocationUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -99,7 +102,26 @@ public class MainPlane extends JFrame {
         return instance;
     }
 
-    public void createBin(String name, Object[] args) throws IOException {
+    public void createBin(String name, Object[] args) throws IOException, ControllerException {
+        Location location = (Location) args[1];
+        AID closestBeacon = null;
+        double closestDist = 1e9;
+        for (String beaconName: beacons) {
+            AgentController agent = container.getAgent(beaconName);
+            var beaconAgentInterface = agent.getO2AInterface(IBeaconAgent.class);
+            Location beaconLocation = beaconAgentInterface.getLocation();
+
+            double dist = LocationUtils.calculateDistance(location, beaconLocation);
+
+            if (dist < closestDist) {
+                closestBeacon = beaconAgentInterface.getBetterAID();
+                closestDist = dist;
+            }
+
+            beaconAgentInterface.getBetterAID();
+        }
+
+        args[0] = closestBeacon;
         createAgent(name, BinAgent.class.getName(), args);
         bins.add(name);
     }
@@ -151,8 +173,26 @@ public class MainPlane extends JFrame {
         }
     }
 
-    public void addNewBin(int ordinalNo, Location location) throws IOException {
-        Object[] agentArgs = new Object[]{String.valueOf(ordinalNo % 2), location};
+    public void addNewBin(int ordinalNo, Location location) throws IOException, ControllerException {
+        AID closestBeacon = null;
+        double closestDist = 1e9;
+        for (String beaconName: beacons) {
+            AgentController agent = container.getAgent(beaconName);
+            var beaconAgentInterface = agent.getO2AInterface(IBeaconAgent.class);
+            Location beaconLocation = beaconAgentInterface.getLocation();
+
+            double dist = LocationUtils.calculateDistance(location, beaconLocation);
+
+            if (dist < closestDist) {
+                closestBeacon = beaconAgentInterface.getBetterAID();
+                closestDist = dist;
+            }
+
+            beaconAgentInterface.getBetterAID();
+        }
+
+        Object[] agentArgs = new Object[]{closestBeacon, location};
+
         createBin("Bin " + ordinalNo, agentArgs);
     }
 

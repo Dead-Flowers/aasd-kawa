@@ -1,11 +1,13 @@
 package pl.smartbin;
 
+import jade.core.AID;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.*;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
 import pl.smartbin.dto.Location;
+import pl.smartbin.utils.LocationUtils;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -18,7 +20,7 @@ import static pl.smartbin.utils.LocationUtils.getRandomLocation;
 public class MainApplication {
     private static ContainerController container;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ControllerException {
         // -gui -name TEST
         Runtime runtime = Runtime.instance();
         Profile profile = new ProfileImpl();
@@ -39,6 +41,19 @@ public class MainApplication {
             );
         }
 
+        for (int i = 0; i < 2; i++) {
+            Object[] agentArgs = new Object[]{Integer.toString(i), getRandomLocation()};
+            gui.createBeacon(
+                    "Beacon " + i,
+                    agentArgs
+            );
+            agentArgs[1] = getRandomLocation();
+            gui.createSupervisor(
+                    "Supervisor " + i,
+                    agentArgs
+            );
+        }
+
         for (int i = 0; i < 4; i++) {
             Object[] agentArgs = new Object[]{String.valueOf(i % 2), getRandomLocation()};
             gui.createBin(
@@ -47,18 +62,7 @@ public class MainApplication {
             );
         }
 
-        for (int i = 0; i < 2; i++) {
-            Object[] agentArgs = new Object[]{Integer.toString(i), getRandomLocation()};
-            gui.createBeacon(
-                "Beacon " + i,
-                agentArgs
-            );
-            agentArgs[1] = getRandomLocation();
-            gui.createSupervisor(
-                "Supervisor " + i,
-                agentArgs
-            );
-        }
+
     }
 }
 

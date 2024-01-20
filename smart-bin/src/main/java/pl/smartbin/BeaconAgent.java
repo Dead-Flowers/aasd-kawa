@@ -112,4 +112,9 @@ public class BeaconAgent extends Agent implements IBeaconAgent{
     public Location getLocation() {
         return location;
     }
+
+    @Override
+    public AID getBetterAID() {
+        return getAID();
+    }
 }

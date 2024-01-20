@@ -1,5 +1,6 @@
 package pl.smartbin;
 
+import jade.wrapper.ControllerException;
 import pl.smartbin.agent.garbage_collector.GarbageCollectorData;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
@@ -39,7 +40,7 @@ public class AgentPanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 try {
                     handleMouseCLick(e);
-                } catch (IOException ex) {
+                } catch (IOException | ControllerException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -47,7 +48,7 @@ public class AgentPanel extends JPanel {
         repaint();
     }
 
-    private void handleMouseCLick(MouseEvent e) throws IOException {
+    private void handleMouseCLick(MouseEvent e) throws IOException, ControllerException {
         if (!e.isControlDown()) {
             checkIfBinPressed(e);
             return;

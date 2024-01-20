@@ -1,1 +1,1 @@
-http://atlas:7778/acc
+http://bbaran-lap:7778/acc

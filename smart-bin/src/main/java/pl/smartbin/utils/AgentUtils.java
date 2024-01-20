@@ -10,6 +10,8 @@ import jade.domain.FIPAException;
 import pl.smartbin.AgentType;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class AgentUtils {
 
@@ -46,6 +48,24 @@ public class AgentUtils {
                         beaconAID.getName());
                 return beaconAID;
             }
+        } catch (FIPAException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static List<AID> findAllBeacons(Agent caller, AgentType callerType) {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription serviceDescription = new ServiceDescription();
+        serviceDescription.setType(AgentType.BEACON.getCode());
+        template.addServices(serviceDescription);
+        try {
+            DFAgentDescription[] result = DFService.search(caller, template);
+            System.out.printf("[%s %s] Found %d beacons\n", callerType.getCode(), caller.getName(), result.length);
+            return Stream.of(result)
+                    .map(DFAgentDescription::getName)
+                    .toList();
         } catch (FIPAException e) {
             e.printStackTrace();
         }
