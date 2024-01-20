@@ -8,7 +8,6 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ProposeInitiator;
 import pl.smartbin.AgentType;
-import pl.smartbin.GarbageCollector;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
@@ -37,8 +36,6 @@ public class GarbageCollectorAgent extends Agent {
     private final DataStore binProposeStore = new DataStore();
     private Location location;
 
-    private final GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
-
 
     protected void setup() {
         this.location = (Location) this.getArguments()[0];
@@ -48,7 +45,7 @@ public class GarbageCollectorAgent extends Agent {
 
         var fsmBehavior = new FSMBehaviour(this);
 
-        var gcBh = new GarbageCollectorCfpBehaviour(this, () -> currentLocation);
+        var gcBh = new GarbageCollectorCfpBehaviour(this, () -> location);
         gcBh.setDataStore(cfpBhStore);
 
         var binProposeBh = new ProposeInitiator(this, null, binProposeStore) {

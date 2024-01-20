@@ -52,9 +52,8 @@ public class MainApplication {
                 agentArgs
             );
             agentArgs[1] = getRandomLocation();
-            gui.createAgent(
+            gui.createSupervisor(
                 "Supervisor " + i,
-                SupervisorAgent.class.getName(),
                 agentArgs
             );
         }

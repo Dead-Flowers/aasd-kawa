@@ -13,7 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import pl.smartbin.AgentType;
-import pl.smartbin.GarbageCollector;
+import pl.smartbin.dto.Location;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
@@ -40,9 +40,9 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
     @Getter
     private Result result;
 
-    private final Supplier<GarbageCollector> locationSupplier;
+    private final Supplier<Location> locationSupplier;
 
-    public GarbageCollectorCfpBehaviour(Agent a, Supplier<GarbageCollector> locationSupplier) {
+    public GarbageCollectorCfpBehaviour(Agent a, Supplier<Location> locationSupplier) {
         super(a, createMessageTemplate(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET));
         this.locationSupplier = locationSupplier;
         registerLastState(new OneShotBehaviour(a) {
