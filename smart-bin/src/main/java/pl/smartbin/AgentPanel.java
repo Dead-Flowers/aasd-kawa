@@ -10,23 +10,24 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AgentPanel extends JPanel {
 
     record BinImageLocationData(int x, int y, int width, int height) {}
 
     private final Map<String, BinOnPlane> bins;
+
     private final Map<String, BinImageLocationData> binImageLocationDataMap;
     private final Map<String, GarbageCollectorOnPlane> trucks;
     private final Map<String, BeaconOnPlane> beacons;
-
     private MainPlane gui;
 
     public AgentPanel() {
-        bins = new HashMap<>();
-        trucks = new HashMap<>();
-        beacons = new HashMap<>();
-        binImageLocationDataMap = new HashMap<>();
+        bins = new ConcurrentHashMap<>();
+        trucks = new ConcurrentHashMap<>();
+        beacons = new ConcurrentHashMap<>();
+        binImageLocationDataMap = new ConcurrentHashMap<>();
 
         gui = MainPlane.getInstance();
 
@@ -125,6 +126,13 @@ public class AgentPanel extends JPanel {
         for (var entry : beacons.entrySet()) {
             drawBeacon(g, entry.getValue());
         }
+    }
+
+    public void updateGcLocations(Map<String, Location> newLocations) {
+        for(var entry : newLocations.entrySet()) {
+            trucks.get(entry.getKey()).location = entry.getValue();
+        }
+        repaint();
     }
 
     public void addBin(String binName, Location location) throws IOException {

@@ -1,6 +1,5 @@
 package pl.smartbin;
 
-import jade.core.Agent;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
@@ -11,7 +10,13 @@ import pl.smartbin.dto.Location;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainPlane extends JFrame {
     private static final int FRAME_WIDTH = 800;
@@ -19,12 +24,32 @@ public class MainPlane extends JFrame {
 
     private static MainPlane instance;
     private ContainerController container;
+    private List<String> garbageCollectors;
 
     private AgentPanel mainPanel;
     private StatsPanel statsPanel;
+    private Timer timer;
 
     private MainPlane(ContainerController container) {
         this.container = container;
+        this.garbageCollectors = new ArrayList<>();
+        timer = new Timer(500, e -> updateGcLocations());
+        timer.start();
+    }
+
+    private void updateGcLocations() {
+        Map<String, Location> newLocations = new HashMap<>();
+        for(String gcName: garbageCollectors) {
+            try {
+                AgentController agent = container.getAgent(gcName);
+                var binAgentInterface = agent.getO2AInterface(IGarbageCollectorAgent.class);
+                Location location = binAgentInterface.getCurrentLocation();
+                newLocations.put(gcName, location);
+            } catch (ControllerException ex) {
+                ex.printStackTrace();
+            }
+        }
+        updateTrucksLocations(newLocations);
     }
 
     public static MainPlane getInstance() {
@@ -59,6 +84,7 @@ public class MainPlane extends JFrame {
 
     public void createGarbageCollector(String name, Object[] args) throws IOException {
         createAgent(name, GarbageCollectorAgent.class.getName(), args);
+        garbageCollectors.add(name);
         Location location = (Location) args[0];
         mainPanel.addGarbageCollector(name, location);
     }
@@ -111,6 +137,10 @@ public class MainPlane extends JFrame {
 
     public void updateBeaconOnline(String beaconName) {
         statsPanel.updateBeaconSet(beaconName);
+    }
+
+    public void updateTrucksLocations(Map<String, Location> newLocations) {
+        mainPanel.updateGcLocations(newLocations);
     }
 
     public void overrideBinUsedCapacity(String binName, int newValue) {

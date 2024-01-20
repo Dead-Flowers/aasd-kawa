@@ -8,6 +8,7 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ProposeInitiator;
 import pl.smartbin.AgentType;
+import pl.smartbin.IGarbageCollectorAgent;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
@@ -21,7 +22,17 @@ import java.util.*;
 import static pl.smartbin.utils.LocationUtils.getRandomLocation;
 import static pl.smartbin.utils.MessageUtils.createMessage;
 
-public class GarbageCollectorAgent extends Agent {
+public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAgent {
+
+    public GarbageCollectorAgent() {
+        super();
+        this.registerO2AInterface(IGarbageCollectorAgent.class, this);
+    }
+
+    @Override
+    public Location getCurrentLocation() {
+        return state.getLocation();
+    }
 
     public static class States {
         public static final String INITIAL = "Initial";
@@ -137,6 +148,16 @@ public class GarbageCollectorAgent extends Agent {
                 // garbage collection completed, we should probably INFORM here
             }
         };
+
+        var locationChangeBh = new TickerBehaviour(this, 1000) {
+            @Override
+            public void onTick() {
+                var location = state.getLocation();
+                state.setLocation(new Location(location.longitude()-1, location.latitude()-1));
+            }
+        };
+
+        addBehaviour(locationChangeBh);
 
         fsmBehavior.registerState(gcBh, States.CFP);
         fsmBehavior.registerState(binProposeBh, States.BIN_PROPOSE);
