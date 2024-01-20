@@ -11,6 +11,7 @@ import jade.lang.acl.MessageTemplate;
 import pl.smartbin.AgentType;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
+import pl.smartbin.dto.Location;
 import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.MessageUtils;

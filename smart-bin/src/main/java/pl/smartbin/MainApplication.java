@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import static pl.smartbin.utils.LocationUtils.getRandomLocation;
+
 public class MainApplication {
     private static ContainerController container;
 
@@ -52,17 +54,11 @@ public class MainApplication {
                 agentArgs
             );
             agentArgs[1] = getRandomLocation();
-            gui.createAgent(
+            gui.createSupervisor(
                 "Supervisor " + i,
-                SupervisorAgent.class.getName(),
                 agentArgs
             );
         }
-    }
-
-    private static Location getRandomLocation() {
-        Random rnd = new Random();
-        return new Location(rnd.nextFloat(0, 100), rnd.nextFloat(0, 100));
     }
 }
 

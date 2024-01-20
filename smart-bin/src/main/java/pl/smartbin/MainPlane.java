@@ -6,6 +6,7 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 import pl.smartbin.agent.garbage_collector.GarbageCollectorAgent;
+import pl.smartbin.agent.supervisor.SupervisorAgent;
 import pl.smartbin.dto.Location;
 
 import javax.swing.*;
@@ -50,6 +51,10 @@ public class MainPlane extends JFrame {
         createAgent(name, BeaconAgent.class.getName(), args);
         Location location = (Location) args[1];
         mainPanel.addBeacon(name, location);
+    }
+
+    public void createSupervisor(String name, Object[] args) throws IOException {
+        createAgent(name, SupervisorAgent.class.getName(), args);
     }
 
     public void createGarbageCollector(String name, Object[] args) throws IOException {

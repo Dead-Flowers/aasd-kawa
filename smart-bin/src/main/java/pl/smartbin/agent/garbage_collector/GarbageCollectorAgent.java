@@ -8,7 +8,6 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ProposeInitiator;
 import pl.smartbin.AgentType;
-import pl.smartbin.GarbageCollector;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
@@ -19,6 +18,7 @@ import pl.smartbin.utils.MessageUtils;
 
 import java.util.*;
 
+import static pl.smartbin.utils.LocationUtils.getRandomLocation;
 import static pl.smartbin.utils.MessageUtils.createMessage;
 
 public class GarbageCollectorAgent extends Agent {
@@ -35,20 +35,17 @@ public class GarbageCollectorAgent extends Agent {
     private final List<AID> beaconAgents = new ArrayList<>();
     private final DataStore cfpBhStore = new DataStore();
     private final DataStore binProposeStore = new DataStore();
-    private Location location;
-
-    private final GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
-
+    private GarbageCollectorData state;
 
     protected void setup() {
-        this.location = (Location) this.getArguments()[0];
+        state = new GarbageCollectorData((Location) this.getArguments()[0]);
         System.out.println("Setting up '" + getAID().getName() + "'");
 
         AgentUtils.registerAgent(this, AgentType.GARBAGE_COLLECTOR);
 
         var fsmBehavior = new FSMBehaviour(this);
 
-        var gcBh = new GarbageCollectorCfpBehaviour(this, () -> currentLocation);
+        var gcBh = new GarbageCollectorCfpBehaviour(this, () -> state.getLocation());
         gcBh.setDataStore(cfpBhStore);
 
         var binProposeBh = new ProposeInitiator(this, null, binProposeStore) {
@@ -83,14 +80,32 @@ public class GarbageCollectorAgent extends Agent {
             @Override
             public void action() {
                 // TODO: simulate something..
+                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Got %s bins to clean left".formatted(binProposeBh.acceptedBins.size()));
+
                 var binEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst();
-                binEntry.ifPresent(x -> {
-                    var reply = MessageUtils.createReply(x.getValue(), ACLMessage.INFORM, MessageProtocol.Bin2GarbageCollector, null);
+                binEntry.ifPresent(this::tryCleanBin);
+
+                if (binProposeBh.acceptedBins.isEmpty()) {
+                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Garbage collector used capacity after collection: " + state.getUsedCapacity());
+                }
+            }
+
+            private void tryCleanBin(Map.Entry<AID, ACLMessage> binEntry) {
+                int binUsedCapacity = Integer.parseInt(binEntry.getValue().getContent());
+                int gcCapacity = binUsedCapacity / 10;
+
+                if (state.hasSpace(gcCapacity)) {
+                    state.addCapacity(gcCapacity);
+
+                    var reply = MessageUtils.createReply(binEntry.getValue(), ACLMessage.INFORM, MessageProtocol.Bin2GarbageCollector, null);
                     send(reply);
-                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Emptying bin: " + x.getKey().getLocalName());
+                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Emptying bin: " + binEntry.getKey().getLocalName());
                     LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
-                    binProposeBh.acceptedBins.remove(x.getKey());
-                });
+                    binProposeBh.acceptedBins.remove(binEntry.getKey());
+                } else {
+                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "No space left, cancelling garbage collection");
+                    binProposeBh.acceptedBins.clear();
+                }
             }
 
             @Override
@@ -107,6 +122,13 @@ public class GarbageCollectorAgent extends Agent {
             }
         }, States.INITIAL);
         fsmBehavior.registerState(new WakerBehaviour(this, 5000) {
+            public void onWake() {
+                if (state.isFull()) {
+                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Removing trash from GC and setting new location");
+                    state.clear();
+                    state.setLocation(getRandomLocation());
+                }
+            }
         }, States.WAIT_SCHEDULE);
 
         var finalBh = new OneShotBehaviour(this) {
