@@ -104,12 +104,14 @@ public class BinAgent extends Agent {
             protected ACLMessage prepareResponse(ACLMessage propose) throws NotUnderstoodException, RefuseException {
                 logReceiveMsg(AgentType.BIN, myAgent.getName(), propose);
                 int decision;
+                String content = null;
                 if (state.usedCapacityPct >= 50) {
                     decision = ACLMessage.ACCEPT_PROPOSAL;
+                    content = JsonUtils.toJson(state.usedCapacityPct);
                 } else {
                     decision = ACLMessage.REJECT_PROPOSAL;
                 }
-                return MessageUtils.createReply(propose, decision, null);
+                return MessageUtils.createReply(propose, decision, content);
             }
         });
 
