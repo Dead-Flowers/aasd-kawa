@@ -28,6 +28,7 @@ public class BinAgent extends Agent {
 
     private BinData state;
     private String regionId;
+    private Location location;
     private AID beaconAID;
     private MainPlane gui;
 
@@ -38,6 +39,7 @@ public class BinAgent extends Agent {
 
         System.out.println("Setting up '" + getAID().getName() + "'");
         this.regionId = (String) this.getArguments()[0];
+        this.location = (Location) this.getArguments()[1];
         AgentUtils.registerAgent(this, AgentType.BIN, AgentUtils.getRegionProp(regionId));
 
         var discoveryBh = new TickerBehaviour(this, 1000) {

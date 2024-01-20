@@ -5,11 +5,13 @@ import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.*;
 import pl.smartbin.agent.supervisor.SupervisorAgent;
+import pl.smartbin.dto.Location;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class MainApplication {
     private static ContainerController container;
@@ -28,32 +30,39 @@ public class MainApplication {
         gui.generateGui();
 
         for (int i = 0; i < 2; i++) {
+            Object[] agentArgs = new Object[]{getRandomLocation()};
             gui.createGarbageCollector(
                 "GarbageCollector " + i,
-                null
+                agentArgs
             );
         }
 
         for (int i = 0; i < 4; i++) {
+            Object[] agentArgs = new Object[]{String.valueOf(i % 2), getRandomLocation()};
             gui.createBin(
                 "Bin " + i,
-                new Object[]{String.valueOf(i % 2)}
+                agentArgs
             );
         }
 
         for (int i = 0; i < 2; i++) {
-            Object[] agentArgs = new Object[]{Integer.toString(i)};
-            gui.createAgent(
-                    "Beacon " + i,
-                    "pl.smartbin.BeaconAgent",
-                    agentArgs
+            Object[] agentArgs = new Object[]{Integer.toString(i), getRandomLocation()};
+            gui.createBeacon(
+                "Beacon " + i,
+                agentArgs
             );
+            agentArgs[1] = getRandomLocation();
             gui.createAgent(
-                    "Supervisor " + i,
-                    SupervisorAgent.class.getName(),
-                    agentArgs
+                "Supervisor " + i,
+                SupervisorAgent.class.getName(),
+                agentArgs
             );
         }
+    }
+
+    private static Location getRandomLocation() {
+        Random rnd = new Random();
+        return new Location(rnd.nextFloat(0, 100), rnd.nextFloat(0, 100));
     }
 }
 

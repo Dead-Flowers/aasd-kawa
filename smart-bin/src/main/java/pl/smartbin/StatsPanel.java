@@ -78,11 +78,11 @@ public class StatsPanel extends JPanel {
         if (!beaconsOnline.isEmpty()) {
             var sortedBeacons = beaconsOnline.stream().sorted().toList();
             for(String key: sortedBeacons) {
-                JPanel rowPanel = new JPanel();
-                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
+//                JPanel rowPanel = new JPanel();
+//                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
                 JLabel label = new JLabel(key);
-                rowPanel.add(label);
-                add(rowPanel);
+//                rowPanel.add(label);
+                add(label);
             }
         } else {
             JLabel label = new JLabel("No bins");
@@ -97,15 +97,15 @@ public class StatsPanel extends JPanel {
         if (!binStats.isEmpty()) {
             var sortedBinKeys = binStats.keySet().stream().sorted().toList();
             for(String key: sortedBinKeys) {
-                JPanel rowPanel = new JPanel();
-                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
+//                JPanel rowPanel = new JPanel();
+//                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
                 var value = binStats.get(key);
                 JLabel label = new JLabel(key + " (" + value.beaconName + "): " + value.value + "%");
-                rowPanel.add(label);
-                JButton removeButton = new JButton("Remove");
-                removeButton.addActionListener(e -> deleteBin(key));
-                rowPanel.add(removeButton);
-                add(rowPanel);
+//                rowPanel.add(label);
+//                JButton removeButton = new JButton("Remove");
+//                removeButton.addActionListener(e -> deleteBin(key));
+//                rowPanel.add(removeButton);
+                add(label);
             }
         } else {
             JLabel label = new JLabel("No bins");
@@ -120,14 +120,14 @@ public class StatsPanel extends JPanel {
         if(!garbageCollectorStats.isEmpty()) {
             var sortedGCKeys = garbageCollectorStats.keySet().stream().sorted().toList();
             for(String key: sortedGCKeys) {
-                JPanel rowPanel = new JPanel();
-                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
+//                JPanel rowPanel = new JPanel();
+//                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
                 JLabel label = new JLabel(key + ": " + garbageCollectorStats.get(key) + "%");
-                rowPanel.add(label);
-                JButton removeButton = new JButton("Remove");
-                removeButton.addActionListener(e -> deleteGc(key));
-                rowPanel.add(removeButton);
-                add(rowPanel);
+//                rowPanel.add(label);
+//                JButton removeButton = new JButton("Remove");
+//                removeButton.addActionListener(e -> deleteGc(key));
+//                rowPanel.add(removeButton);
+                add(label);
             }
         } else {
             JLabel label = new JLabel("No garbage trucks");

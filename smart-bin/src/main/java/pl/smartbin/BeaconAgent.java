@@ -11,6 +11,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import pl.smartbin.dto.BinData;
+import pl.smartbin.dto.Location;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.MessageUtils;
 
@@ -21,6 +22,7 @@ import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class BeaconAgent extends Agent {
     private final HashMap<AID, BinData> binCapacities = new HashMap<>();
+    private Location location;
     private MainPlane gui;
 
 
@@ -47,6 +49,8 @@ public class BeaconAgent extends Agent {
     }
 
     protected void setup() {
+        this.location = (Location) this.getArguments()[1];
+
         gui = MainPlane.getInstance();
         System.out.println("Setting up '" + getAID().getName() + "'");
 

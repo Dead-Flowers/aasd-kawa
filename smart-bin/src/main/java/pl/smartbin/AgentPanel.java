@@ -1,5 +1,7 @@
 package pl.smartbin;
 
+import pl.smartbin.dto.Location;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -9,10 +11,12 @@ import java.util.Map;
 public class AgentPanel extends JPanel {
     private final Map<String, BinOnPlane> bins;
     private final Map<String, GarbageCollectorOnPlane> trucks;
+    private final Map<String, BeaconOnPlane> beacons;
 
     public AgentPanel() {
         bins = new HashMap<>();
         trucks = new HashMap<>();
+        beacons = new HashMap<>();
         setPreferredSize(new Dimension(600, 400));
         repaint();
     }
@@ -27,10 +31,13 @@ public class AgentPanel extends JPanel {
         for (var entry : trucks.entrySet()) {
             drawTruck(g, entry.getValue());
         }
+        for (var entry : beacons.entrySet()) {
+            drawBeacon(g, entry.getValue());
+        }
     }
 
-    public void addBin(String binName, float latitude, float longitude) throws IOException {
-        bins.put(binName, new BinOnPlane(latitude, longitude, binName));
+    public void addBin(String binName, Location location) throws IOException {
+        bins.put(binName, new BinOnPlane(location, binName));
         repaint();
     }
 
@@ -39,8 +46,8 @@ public class AgentPanel extends JPanel {
         repaint();
     }
 
-    public void addGarbageCollector(String truckName, float latitude, float longitude) throws IOException {
-        trucks.put(truckName, new GarbageCollectorOnPlane(latitude, longitude, truckName));
+    public void addGarbageCollector(String truckName, Location location) throws IOException {
+        trucks.put(truckName, new GarbageCollectorOnPlane(location, truckName));
         repaint();
     }
 
@@ -49,8 +56,13 @@ public class AgentPanel extends JPanel {
         repaint();
     }
 
-    public void updateBinUsedCapacity(String binName, int usedCapacityPct) {
-        bins.get(binName).setUsedCapacityPct(usedCapacityPct);
+    public void addBeacon(String beaconName, Location location) throws IOException {
+        beacons.put(beaconName, new BeaconOnPlane(location, beaconName));
+        repaint();
+    }
+
+    public void removeBeacon(String beaconName) {
+        beacons.remove(beaconName);
         repaint();
     }
 
@@ -63,8 +75,8 @@ public class AgentPanel extends JPanel {
     }
 
     private void drawBin(Graphics g, BinOnPlane bin) {
-        int dotX = (int) (bin.getLongitude() / 100 * getWidth());
-        int dotY = (int) (bin.getLatitude() / 100 * getHeight());
+        int dotX = (int) (bin.getLocation().longitude() / 100 * getWidth());
+        int dotY = (int) (bin.getLocation().latitude() / 100 * getHeight());
 
         g.setColor(Color.BLACK);
         Image binImage = bin.getImage();
@@ -73,12 +85,22 @@ public class AgentPanel extends JPanel {
     }
 
     private void drawTruck(Graphics g, GarbageCollectorOnPlane truck) {
-        int dotX = (int) (truck.getLongitude() / 100 * getWidth());
-        int dotY = (int) (truck.getLatitude() / 100 * getHeight());
+        int dotX = (int) (truck.getLocation().longitude() / 100 * getWidth());
+        int dotY = (int) (truck.getLocation().latitude() / 100 * getHeight());
 
         g.setColor(Color.BLACK);
         Image truckImage = truck.getImage();
         g.drawImage(truckImage, dotX, dotY, null);
         g.drawString(truck.getName(), dotX - BinOnPlane.ICON_WIDTH/2, dotY + 10);
+    }
+
+    private void drawBeacon(Graphics g, BeaconOnPlane beacon) {
+        int dotX = (int) (beacon.getLocation().longitude() / 100 * getWidth());
+        int dotY = (int) (beacon.getLocation().latitude() / 100 * getHeight());
+
+        g.setColor(Color.BLACK);
+        Image beaconImage = beacon.getImage();
+        g.drawImage(beaconImage, dotX, dotY, null);
+        g.drawString(beacon.getName(), dotX - BinOnPlane.ICON_WIDTH/2, dotY + 10);
     }
 }

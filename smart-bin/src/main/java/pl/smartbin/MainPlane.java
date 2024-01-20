@@ -5,6 +5,7 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 import pl.smartbin.agent.garbage_collector.GarbageCollectorAgent;
+import pl.smartbin.dto.Location;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,14 +44,20 @@ public class MainPlane extends JFrame {
 
     public void createBin(String name, Object[] args) throws IOException {
         createAgent(name, BinAgent.class.getName(), args);
-        Random rnd = new Random();
-        mainPanel.addBin(name, rnd.nextFloat(20, 80), rnd.nextFloat(20, 80));
+        Location location = (Location) args[1];
+        mainPanel.addBin(name, location);
+    }
+
+    public void createBeacon(String name, Object[] args) throws IOException {
+        createAgent(name, BeaconAgent.class.getName(), args);
+        Location location = (Location) args[1];
+        mainPanel.addBeacon(name, location);
     }
 
     public void createGarbageCollector(String name, Object[] args) throws IOException {
         createAgent(name, GarbageCollectorAgent.class.getName(), args);
-        Random rnd = new Random();
-        mainPanel.addGarbageCollector(name, rnd.nextFloat(20, 80), rnd.nextFloat(20, 80));
+        Location location = (Location) args[0];
+        mainPanel.addGarbageCollector(name, location);
     }
 
     public void createAgent(String agentName, String agentClass, Object[] args) {

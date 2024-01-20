@@ -2,6 +2,7 @@ package pl.smartbin;
 
 import lombok.Getter;
 import lombok.Setter;
+import pl.smartbin.dto.Location;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -20,8 +21,8 @@ public class BinOnPlane extends ObjectOnPlane{
 
     private final Image image;
 
-    public BinOnPlane(float latitude, float longitude, String name) throws IOException {
-        super(latitude, longitude, name);
+    public BinOnPlane(Location location, String name) throws IOException {
+        super(location, name);
         this.usedCapacityPct = 0;
         BufferedImage fullRedImage = ImageIO.read(getClass().getResourceAsStream("/images/bin.png"));
         image = fullRedImage.getScaledInstance(ICON_WIDTH, ICON_HEIGHT, Image.SCALE_FAST);

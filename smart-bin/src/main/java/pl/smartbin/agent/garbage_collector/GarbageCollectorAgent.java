@@ -11,6 +11,7 @@ import pl.smartbin.AgentType;
 import pl.smartbin.GarbageCollector;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
+import pl.smartbin.dto.Location;
 import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
@@ -34,11 +35,13 @@ public class GarbageCollectorAgent extends Agent {
     private final List<AID> beaconAgents = new ArrayList<>();
     private final DataStore cfpBhStore = new DataStore();
     private final DataStore binProposeStore = new DataStore();
+    private Location location;
 
     private final GarbageCollector currentLocation = new GarbageCollector(new Random().nextFloat(0, 100), new Random().nextFloat(0, 100));
 
 
     protected void setup() {
+        this.location = (Location) this.getArguments()[0];
         System.out.println("Setting up '" + getAID().getName() + "'");
 
         AgentUtils.registerAgent(this, AgentType.GARBAGE_COLLECTOR);
