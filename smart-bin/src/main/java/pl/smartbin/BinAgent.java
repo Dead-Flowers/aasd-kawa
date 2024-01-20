@@ -109,7 +109,7 @@ public class BinAgent extends Agent implements IBinAgent {
                 String content = null;
                 if (state.usedCapacityPct >= 50) {
                     decision = ACLMessage.ACCEPT_PROPOSAL;
-                    content = JsonUtils.toJson(state.usedCapacityPct);
+                    content = JsonUtils.toJson(state);
                 } else {
                     decision = ACLMessage.REJECT_PROPOSAL;
                 }

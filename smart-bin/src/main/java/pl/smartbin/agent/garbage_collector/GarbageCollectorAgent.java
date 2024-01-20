@@ -7,15 +7,13 @@ import jade.core.behaviours.*;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ProposeInitiator;
+import lombok.SneakyThrows;
 import pl.smartbin.AgentType;
 import pl.smartbin.IGarbageCollectorAgent;
 import pl.smartbin.MessageProtocol;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
-import pl.smartbin.utils.AgentUtils;
-import pl.smartbin.utils.JsonUtils;
-import pl.smartbin.utils.LoggingUtils;
-import pl.smartbin.utils.MessageUtils;
+import pl.smartbin.utils.*;
 
 import java.util.*;
 
@@ -39,10 +37,15 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
         return state;
     }
 
+    private static final String NEXT_BIN_KEY = "Next-bin";
+
     public static class States {
         public static final String INITIAL = "Initial";
         public static final String WAIT_SCHEDULE = "Wait-Schedule";
         public static final String BIN_PROPOSE = "Bin-propose";
+        public static final String NEXT_BIN = "Next-bin";
+        public static final String GO_TO_BIN = "Go-to-bin";
+        public static final String WAIT_BEFORE_GC = "Wait-before-gc";
         public static final String BIN_CLEAN = "Bin-clean";
         public static final String CFP = "Cfp";
         public static final String FINAL = "Finalee";
@@ -51,6 +54,7 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
     private final List<AID> beaconAgents = new ArrayList<>();
     private final DataStore cfpBhStore = new DataStore();
     private final DataStore binProposeStore = new DataStore();
+    private final DataStore nextBinDs = new DataStore();
     private GarbageCollectorData state;
 
     protected void setup() {
@@ -92,14 +96,62 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             }
         };
 
-        var binCleanBh = new SimpleBehaviour(this) {
+        var chooseNextBinBh = new OneShotBehaviour() {
             @Override
             public void action() {
-                // TODO: simulate something..
+                Map.Entry<AID, ACLMessage> nextBinEntry = null;
+                if (!binProposeBh.acceptedBins.isEmpty()) {
+                    nextBinEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst().get();
+                }
+                nextBinDs.put(NEXT_BIN_KEY, nextBinEntry);
+            }
+
+            @Override
+            public int onEnd() {
+                if (nextBinDs.get(NEXT_BIN_KEY) == null) {
+                    return 0;
+                }
+                return 1;
+            }
+        };
+
+        var driveBh = new SimpleBehaviour() {
+
+            private Location targetLocation = null;
+            @SneakyThrows
+            @Override
+            public void action() {
+                Map.Entry<AID, ACLMessage> binEntry = (Map.Entry<AID, ACLMessage>) nextBinDs.get(NEXT_BIN_KEY);
+                targetLocation = JsonUtils.fromJson(binEntry.getValue().getContent(), BinData.class).location;
+
+
+                Location nextLocation = LocationUtils.calculateTargetLocation(state.getLocation(), targetLocation, 2);
+                state.setLocation(nextLocation);
+                myAgent.doWait(100);
+            }
+
+            @Override
+            public boolean done() {
+                return state.getLocation().equals(targetLocation);
+            }
+
+        };
+
+        fsmBehavior.registerState(new OneShotBehaviour(this) {
+            @Override
+            public void action() {
+                // Symulacja opróżniania kosza
+                doWait(3000);
+            }
+        }, States.WAIT_BEFORE_GC);
+
+        var binCleanBh = new OneShotBehaviour(this) {
+            @SuppressWarnings("unchecked")
+            @Override
+            public void action() {
                 LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Got %s bins to clean left".formatted(binProposeBh.acceptedBins.size()));
 
-                var binEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst();
-                binEntry.ifPresent(this::tryCleanBin);
+                tryCleanBin((Map.Entry<AID, ACLMessage>) nextBinDs.get(NEXT_BIN_KEY));
 
                 if (binProposeBh.acceptedBins.isEmpty()) {
                     LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Garbage collector used capacity after collection: " + state.getUsedCapacity());
@@ -107,7 +159,7 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             }
 
             private void tryCleanBin(Map.Entry<AID, ACLMessage> binEntry) {
-                int binUsedCapacity = Integer.parseInt(binEntry.getValue().getContent());
+                int binUsedCapacity = JsonUtils.fromJson(binEntry.getValue().getContent(), BinData.class).usedCapacityPct;
                 int gcCapacity = binUsedCapacity / 10;
 
                 if (state.hasSpace(gcCapacity)) {
@@ -122,11 +174,6 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                     LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "No space left, cancelling garbage collection");
                     binProposeBh.acceptedBins.clear();
                 }
-            }
-
-            @Override
-            public boolean done() {
-                return binProposeBh.acceptedBins.isEmpty();
             }
         };
 
@@ -154,18 +201,10 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             }
         };
 
-        var locationChangeBh = new TickerBehaviour(this, 1000) {
-            @Override
-            public void onTick() {
-                var location = state.getLocation();
-                state.setLocation(new Location(location.longitude()-1, location.latitude()-1));
-            }
-        };
-
-        addBehaviour(locationChangeBh);
-
         fsmBehavior.registerState(gcBh, States.CFP);
         fsmBehavior.registerState(binProposeBh, States.BIN_PROPOSE);
+        fsmBehavior.registerState(chooseNextBinBh, States.NEXT_BIN);
+        fsmBehavior.registerState(driveBh, States.GO_TO_BIN);
         fsmBehavior.registerState(binCleanBh, States.BIN_CLEAN);
         fsmBehavior.registerState(finalBh, States.FINAL);
 
@@ -173,8 +212,13 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
         fsmBehavior.registerDefaultTransition(States.WAIT_SCHEDULE, States.CFP);
         fsmBehavior.registerTransition(States.CFP, States.BIN_PROPOSE, 1);
         fsmBehavior.registerTransition(States.CFP, States.WAIT_SCHEDULE, 0, new String[]{States.WAIT_SCHEDULE, States.CFP});
-        fsmBehavior.registerDefaultTransition(States.BIN_PROPOSE, States.BIN_CLEAN);
-        fsmBehavior.registerDefaultTransition(States.BIN_CLEAN, States.FINAL);
+        fsmBehavior.registerDefaultTransition(States.BIN_PROPOSE, States.NEXT_BIN);
+
+        fsmBehavior.registerTransition(States.NEXT_BIN, States.FINAL, 0);
+        fsmBehavior.registerDefaultTransition(States.NEXT_BIN, States.GO_TO_BIN);
+        fsmBehavior.registerDefaultTransition(States.GO_TO_BIN, States.WAIT_BEFORE_GC);
+        fsmBehavior.registerDefaultTransition(States.WAIT_BEFORE_GC, States.BIN_CLEAN);
+        fsmBehavior.registerDefaultTransition(States.BIN_CLEAN, States.NEXT_BIN);
         fsmBehavior.registerDefaultTransition(States.FINAL, States.WAIT_SCHEDULE, new String[]{States.WAIT_SCHEDULE, States.CFP, States.BIN_PROPOSE, States.BIN_CLEAN, States.FINAL});
 
 
