@@ -110,7 +110,7 @@ public class SupervisorBehaviour extends FSMBehaviour {
     }
 
     private boolean shouldStartAuction() {
-        return binCapacities.values().stream().allMatch(bc -> bc.usedCapacityPct > 50);
+        return binCapacities.values().stream().allMatch(bc -> bc.usedCapacityPct > 50) || binCapacities.values().stream().anyMatch(bc -> bc.usedCapacityPct >= 95);
     }
 
     private ACLMessage getCfp() {

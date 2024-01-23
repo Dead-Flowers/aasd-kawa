@@ -82,7 +82,7 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
         LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Accept proposal from " + accept.getSender().getName());
         notifyObserver(cfp, propose, accept, null);
-        return MessageUtils.createReply(accept, ACLMessage.INFORM, null);
+        return null;
     }
 
     @Override

@@ -86,7 +86,6 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                 }.getType());
                 var bins = allBins.keySet().toArray(new AID[0]);
                 propose = createMessage(ACLMessage.PROPOSE, FIPANames.InteractionProtocol.FIPA_PROPOSE, bins);
-                //getDataStore().put(INITIATION_K, propose);
                 return super.prepareInitiations(propose);
             }
 
@@ -198,6 +197,12 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             @Override
             public void action() {
                 // garbage collection completed, we should probably INFORM here
+                var msg = gcBh.getResult().accepted;
+                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, this.myAgent.getName(), "Done collecting");
+                if (msg != null) {
+                    var inform = MessageUtils.createReply(msg, ACLMessage.INFORM, null);
+                    send(inform);
+                }
             }
         };
 
@@ -218,8 +223,8 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
         fsmBehavior.registerDefaultTransition(States.NEXT_BIN, States.GO_TO_BIN);
         fsmBehavior.registerDefaultTransition(States.GO_TO_BIN, States.WAIT_BEFORE_GC);
         fsmBehavior.registerDefaultTransition(States.WAIT_BEFORE_GC, States.BIN_CLEAN);
-        fsmBehavior.registerDefaultTransition(States.BIN_CLEAN, States.NEXT_BIN);
-        fsmBehavior.registerDefaultTransition(States.FINAL, States.WAIT_SCHEDULE, new String[]{States.WAIT_SCHEDULE, States.CFP, States.BIN_PROPOSE, States.BIN_CLEAN, States.FINAL});
+        fsmBehavior.registerDefaultTransition(States.BIN_CLEAN, States.NEXT_BIN, new String[]{States.NEXT_BIN, States.GO_TO_BIN, States.WAIT_BEFORE_GC, States.BIN_CLEAN});
+        fsmBehavior.registerDefaultTransition(States.FINAL, States.WAIT_SCHEDULE, new String[]{States.WAIT_SCHEDULE, States.CFP, States.BIN_PROPOSE, States.NEXT_BIN, States.BIN_CLEAN, States.FINAL});
 
 
         addBehaviour(fsmBehavior);
