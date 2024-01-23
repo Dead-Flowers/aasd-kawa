@@ -9,7 +9,7 @@ import pl.smartbin.AgentType;
 public class LoggingUtils {
 
     public static void log(AgentType agentType, String agentName, String info) {
-        System.out.printf("[%s %s] %s%n", agentType.getCode(), agentName, info);
+        System.out.printf("[%s] %s%n", agentName, info);
     }
 
     public static void logSendMsg(AgentType agentType, String senderName, String receiverName) {

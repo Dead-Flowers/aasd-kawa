@@ -48,8 +48,10 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
         registerLastState(new OneShotBehaviour(a) {
             @Override
             public void action() {
-                var wasAccepted = result.accepted != null;
-                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "CFP done, accepted: " + wasAccepted);
+                if (result.accepted != null) {
+                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(),
+                                     "Starting garbage collection for " + result.accepted.getSender().getLocalName());
+                }
             }
         }, "Final");
         registerDefaultTransition(DUMMY_FINAL, "Final", new String[]{"Final"});
@@ -60,15 +62,9 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
         return result != null && result.accepted != null ? 1 : 0;
     }
 
-    @Override
-    protected void handleStateEntered(Behaviour state) {
-        super.handleStateEntered(state);
-        LoggingUtils.logFsmState(this, this.getCurrent());
-    }
 
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
-        LoggingUtils.logReceiveMsg(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), cfp);
         ACLMessage msg = createReply(cfp, ACLMessage.PROPOSE, JsonUtils.toJson(locationSupplier.get()));
         msg.setReplyByDate(Date.from(Instant.now().plusSeconds(10)));
         return msg;
@@ -80,7 +76,6 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
 
     @Override
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Accept proposal from " + accept.getSender().getName());
         notifyObserver(cfp, propose, accept, null);
         return null;
     }
@@ -88,10 +83,5 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
     @Override
     protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
         notifyObserver(cfp, propose, null, reject);
-        if (reject == null || reject.getSender() == null) {
-            LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "REJECT!! " + cfp.getSender().getName());
-            return;
-        }
-        LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(), "Reject proposal from " + reject.getSender().getName());
     }
 }

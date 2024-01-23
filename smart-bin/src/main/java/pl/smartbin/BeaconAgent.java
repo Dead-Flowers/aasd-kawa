@@ -13,6 +13,7 @@ import jade.lang.acl.ACLMessage;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
 import pl.smartbin.utils.JsonUtils;
+import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
 import javax.swing.*;
@@ -34,8 +35,18 @@ public class BeaconAgent extends Agent implements IBeaconAgent{
         switch (msg.getProtocol()) {
             case MessageProtocol.Bin2Beacon_Capacity:
                 var val = JsonUtils.fromJson(msg.getContent(), BinData.class);
+                BinData prevCapacity = binCapacities.get(msg.getSender());
+                if (prevCapacity != null && prevCapacity.usedCapacityPct <= 50 && val.usedCapacityPct > 50) {
+                    binCapacities.put(msg.getSender(), val);
+                    LoggingUtils.log(AgentType.BEACON, getLocalName(),
+                                     "Number of bins beeing filled over half of the capacity: %s of %s".formatted(
+                                     binCapacities.values().stream().map(bd -> bd.usedCapacityPct).filter(v -> v > 50).count(),
+                                     binCapacities.entrySet().size()));
+                } else if (prevCapacity != null && prevCapacity.usedCapacityPct <= 95 && val.usedCapacityPct > 95) {
+                    LoggingUtils.log(AgentType.BEACON, getLocalName(),
+                                     "One of the bins if filled over 95% of its capacity");
+                }
                 binCapacities.put(msg.getSender(), val);
-                System.out.printf("[Beacon %s] Capacity of %s = %d\n", getName(), msg.getSender().getName(), val.usedCapacityPct);
                 break;
             default:
                 break;
@@ -82,8 +93,6 @@ public class BeaconAgent extends Agent implements IBeaconAgent{
 
                 ACLMessage msg = receive();
                 if (msg != null) {
-                    logReceiveMsg(AgentType.BEACON, getName(), msg);
-
                     switch (msg.getPerformative()) {
 
                         case ACLMessage.INFORM:
