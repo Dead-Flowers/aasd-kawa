@@ -8,6 +8,7 @@ import jade.core.behaviours.WakerBehaviour;
 import lombok.Getter;
 import lombok.Setter;
 import pl.smartbin.AgentType;
+import pl.smartbin.dto.Location;
 import pl.smartbin.utils.AgentUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -23,11 +24,16 @@ public class SupervisorAgent extends Agent {
     @Setter
     private boolean inProgress = false;
 
+    @Getter
+    @Setter
+    private Location location;
+
     @Override
     protected void setup() {
         System.out.println("Setting up '" + getAID().getName() + "'");
 
         this.region = (String) getArguments()[0];
+        this.location = (Location) getArguments()[1];
         AgentUtils.registerAgent(this, AgentType.SUPERVISOR, AgentUtils.getRegionProp(region));
 
         var discoveryBh = new TickerBehaviour(this, TimeUnit.SECONDS.toMillis(1)) {

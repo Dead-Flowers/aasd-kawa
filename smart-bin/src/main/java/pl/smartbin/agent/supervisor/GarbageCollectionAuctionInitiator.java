@@ -6,7 +6,10 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 import pl.smartbin.AgentType;
 import pl.smartbin.dto.BinData;
+import pl.smartbin.dto.Location;
+import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
+import pl.smartbin.utils.LocationUtils;
 import pl.smartbin.utils.MessageUtils;
 
 import java.util.Map;
@@ -55,6 +58,7 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
     protected void handleAllResponses(Vector responses, Vector acceptances) {
         log(AgentType.SUPERVISOR, myAgent.getName(), "Handle all responses: " + responses.size());
         ACLMessage bestOffer = null;
+        double bestOfferDist = 1e9;
 
         for (Object response : responses) {
             ACLMessage resp = (ACLMessage) response;
@@ -62,13 +66,27 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
             if (ACLMessage.PROPOSE == resp.getPerformative()) {
                 ACLMessage reply = MessageUtils.createReply(resp, ACLMessage.REJECT_PROPOSAL, null);
 
+                Location gcLocation = JsonUtils.fromJson(resp.getContent(), Location.class);
+                double dist = LocationUtils.calculateDistance(gcLocation, agent.getLocation());
+
+//                System.out.println("=================================================");
+//                System.out.printf("GarbColl location: %f | %f\n", gcLocation.longitude(), gcLocation.latitude());
+//                System.out.printf("Beacon   location: %f | %f\n", agent.getLocation().longitude(), agent.getLocation().latitude());
+//                System.out.printf("Dist: %f\n", dist);
+//                System.out.printf("BestOfferDist: %f\n", bestOfferDist);
+//                System.out.println("=================================================");
+
+                if (dist < bestOfferDist) {
+                    bestOffer = reply;
+                    bestOfferDist = dist;
+                }
+
                 acceptances.add(reply);
             }
         }
         if (acceptances.isEmpty())
             return;
-        // TODO: for now, randomly choose best offer
-        bestOffer = (ACLMessage) acceptances.get(new Random().nextInt(0, acceptances.size()));
+
         bestOffer.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
         bestOffer.setContent(agent.getRegion());
 
