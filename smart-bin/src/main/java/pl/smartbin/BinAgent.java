@@ -43,7 +43,7 @@ public class BinAgent extends Agent implements IBinAgent {
         System.out.println("Setting up '" + getAID().getName() + "'");
         this.beaconAID = (AID) this.getArguments()[0];
         this.location = (Location) this.getArguments()[1];
-        state = new BinData(location, new Random().nextInt(45, 50));
+        state = new BinData(location, new Random().nextInt(0, 40));
         AgentUtils.registerAgent(this, AgentType.BIN); // AgentUtils.getRegionProp(regionId)
 
 //        var discoveryBh = new TickerBehaviour(this, 1000) {

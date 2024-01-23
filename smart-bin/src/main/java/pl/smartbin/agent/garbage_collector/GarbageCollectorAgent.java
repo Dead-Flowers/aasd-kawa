@@ -88,7 +88,6 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                 propose = createMessage(ACLMessage.PROPOSE, FIPANames.InteractionProtocol.FIPA_PROPOSE, bins);
                 LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(),
                                  "Sending propose to %s bins".formatted(allBins.size()));
-                //getDataStore().put(INITIATION_K, propose);
                 return super.prepareInitiations(propose);
             }
 
@@ -102,19 +101,9 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             @Override
             public void action() {
                 Map.Entry<AID, ACLMessage> nextBinEntry = null;
-
                 if (!binProposeBh.acceptedBins.isEmpty()) {
-
-                    int currentCapacity = 0;
-                    for (Map.Entry<AID, ACLMessage> binEntry : binProposeBh.acceptedBins.entrySet()) {
-                        int binUsedCapacity = JsonUtils.fromJson(binEntry.getValue().getContent(), BinData.class).usedCapacityPct;
-                        if (binUsedCapacity > currentCapacity) {
-                            currentCapacity = binUsedCapacity;
-                            nextBinEntry = binEntry;
-                        }
-                    }
+                    nextBinEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst().get();
                 }
-
                 nextBinDs.put(NEXT_BIN_KEY, nextBinEntry);
             }
 
