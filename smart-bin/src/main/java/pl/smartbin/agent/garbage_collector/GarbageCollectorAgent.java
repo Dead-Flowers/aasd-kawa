@@ -100,9 +100,19 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             @Override
             public void action() {
                 Map.Entry<AID, ACLMessage> nextBinEntry = null;
+
                 if (!binProposeBh.acceptedBins.isEmpty()) {
-                    nextBinEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst().get();
+
+                    int currentCapacity = 0;
+                    for (Map.Entry<AID, ACLMessage> binEntry : binProposeBh.acceptedBins.entrySet()) {
+                        int binUsedCapacity = JsonUtils.fromJson(binEntry.getValue().getContent(), BinData.class).usedCapacityPct;
+                        if (binUsedCapacity > currentCapacity) {
+                            currentCapacity = binUsedCapacity;
+                            nextBinEntry = binEntry;
+                        }
+                    }
                 }
+
                 nextBinDs.put(NEXT_BIN_KEY, nextBinEntry);
             }
 
