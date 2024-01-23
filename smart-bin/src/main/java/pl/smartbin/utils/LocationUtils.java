@@ -11,7 +11,7 @@ public class LocationUtils {
 
     public static Location getRandomLocation() {
         Random rnd = new Random();
-        return new Location(rnd.nextFloat(0, 100), rnd.nextFloat(0, 100));
+        return new Location(rnd.nextFloat(15, 85), rnd.nextFloat(15, 85));
     }
 
     public static double calculateDistance(Location from, Location to) {

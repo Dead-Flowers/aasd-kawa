@@ -12,6 +12,7 @@ import pl.smartbin.utils.LocationUtils;
 import javax.swing.*;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -40,14 +41,14 @@ public class MainApplication {
                 agentArgs
             );
         }
-
+        var locations = List.of(new Location(25, 50), new Location(75, 50));
         for (int i = 0; i < 2; i++) {
-            Object[] agentArgs = new Object[]{Integer.toString(i), getRandomLocation()};
+            Object[] agentArgs = new Object[]{Integer.toString(i), locations.get(i)};
             gui.createBeacon(
                     "Beacon " + i,
                     agentArgs
             );
-            agentArgs[1] = getRandomLocation();
+            //agentArgs[1] = getRandomLocation();
             gui.createSupervisor(
                     "Supervisor " + i,
                     agentArgs
