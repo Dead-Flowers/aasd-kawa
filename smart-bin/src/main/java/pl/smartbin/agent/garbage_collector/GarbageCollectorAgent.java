@@ -182,7 +182,7 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
         }, States.INITIAL);
         fsmBehavior.registerState(new WakerBehaviour(this, 5000) {
             public void onWake() {
-                if (state.isFull()) {
+                if (state.getUsedCapacity() > 0) {
                     LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Removing trash from GC and setting new location");
                     state.clear();
                     state.setLocation(getRandomLocation());
