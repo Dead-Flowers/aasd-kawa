@@ -41,11 +41,11 @@ public class AgentUtils {
         template.addServices(serviceDescription);
         try {
             DFAgentDescription[] result = DFService.search(caller, template);
-            System.out.printf("[%s %s] Found %d beacons\n", callerType.getCode(), caller.getName(), result.length);
+//            System.out.printf("[%s %s] Found %d beacons\n", callerType.getCode(), caller.getName(), result.length);
             if (result.length == 1) {
                 AID beaconAID = result[0].getName();
-                System.out.printf("[%s %s] Found beacon %s\n", callerType.getCode(), caller.getName(),
-                        beaconAID.getName());
+//                System.out.printf("[%s %s] Found beacon %s\n", callerType.getCode(), caller.getName(),
+//                        beaconAID.getName());
                 return beaconAID;
             }
         } catch (FIPAException e) {
@@ -62,7 +62,7 @@ public class AgentUtils {
         template.addServices(serviceDescription);
         try {
             DFAgentDescription[] result = DFService.search(caller, template);
-            System.out.printf("[%s %s] Found %d beacons\n", callerType.getCode(), caller.getName(), result.length);
+//            System.out.printf("[%s %s] Found %d beacons\n", callerType.getCode(), caller.getName(), result.length);
             return Stream.of(result)
                     .map(DFAgentDescription::getName)
                     .toList();
@@ -80,7 +80,7 @@ public class AgentUtils {
         template.addServices(serviceDescription);
         try {
             DFAgentDescription[] result = DFService.search(caller, template);
-            System.out.printf("[%s %s] Found %d garbage collectors\n", callerType.getCode(), caller.getName(), result.length);
+//            System.out.printf("[%s %s] Found %d garbage collectors\n", callerType.getCode(), caller.getName(), result.length);
 
             return Arrays.stream(result)
                     .map(DFAgentDescription::getName)
@@ -100,7 +100,7 @@ public class AgentUtils {
         template.addServices(serviceDescription);
         try {
             DFAgentDescription[] result = DFService.search(caller, template);
-            System.out.printf("[%s %s] Found %d bins\n", callerType.getCode(), caller.getName(), result.length);
+//            System.out.printf("[%s %s] Found %d bins\n", callerType.getCode(), caller.getName(), result.length);
 
             return Arrays.stream(result)
                     .map(DFAgentDescription::getName)

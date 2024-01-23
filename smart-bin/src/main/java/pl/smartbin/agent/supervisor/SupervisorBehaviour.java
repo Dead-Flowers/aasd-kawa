@@ -56,7 +56,6 @@ public class SupervisorBehaviour extends FSMBehaviour {
             @Override
             public int onEnd() {
                 if (agent.getBeaconAID() == null) {
-                    System.out.println("BeaconID " + agent.getBeaconAID().getName());
                     return 0;
                 }
                 return 1;
@@ -76,6 +75,7 @@ public class SupervisorBehaviour extends FSMBehaviour {
                 if (binCapacities.isEmpty() || !shouldStartAuction()) {
                     return 0;
                 }
+                log(AgentType.SUPERVISOR, a.getLocalName(), "Starting auction");
                 return 1;
             }
         };
@@ -93,18 +93,10 @@ public class SupervisorBehaviour extends FSMBehaviour {
         registerLastState(b, FINAL);
     }
 
-    @Override
-    protected void handleStateEntered(Behaviour state) {
-        super.handleStateEntered(state);
-        logFsmState(this, state);
-    }
-
     private HashMap<AID, BinData> receiveBinCapacities() {
         myAgent.send(MessageUtils.createMessage(ACLMessage.QUERY_IF, MessageProtocol.Supervisor2Beacon_Capacities,
                 agent.getBeaconAID()));
-        logSendMsg(AgentType.SUPERVISOR, agent.getName(), agent.getBeaconAID().getName());
         ACLMessage msg = agent.blockingReceive(MessageTemplate.MatchProtocol(MessageProtocol.Supervisor2Beacon_Capacities));
-        logReceiveMsg(AgentType.SUPERVISOR, agent.getName(), msg);
         return JsonUtils.fromJson(msg.getContent(), new TypeToken<HashMap<AID, BinData>>() {
         }.getType());
     }
@@ -121,9 +113,5 @@ public class SupervisorBehaviour extends FSMBehaviour {
         cfp.setContent(JsonUtils.toJson(binCapacities));
 
         return cfp;
-    }
-
-    private AID getWinnerAID() {
-        return gcAIDs[0];
     }
 }

@@ -104,13 +104,14 @@ public class BinAgent extends Agent implements IBinAgent {
         addBehaviour(new ProposeResponder(this, MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_PROPOSE)) {
             @Override
             protected ACLMessage prepareResponse(ACLMessage propose) throws NotUnderstoodException, RefuseException {
-                logReceiveMsg(AgentType.BIN, myAgent.getName(), propose);
                 int decision;
                 String content = null;
                 if (state.usedCapacityPct >= 50) {
                     decision = ACLMessage.ACCEPT_PROPOSAL;
                     content = JsonUtils.toJson(state);
                 } else {
+                    LoggingUtils.log(AgentType.BIN, getLocalName(),
+                                     "My capacity used is below 50 percent (%s). Rejecting garbage collection proposal.".formatted(state.usedCapacityPct));
                     decision = ACLMessage.REJECT_PROPOSAL;
                 }
                 return MessageUtils.createReply(propose, decision, content);
@@ -142,8 +143,7 @@ public class BinAgent extends Agent implements IBinAgent {
     }
 
     private void handleInform(ACLMessage msg) {
-        logReceiveMsg(AgentType.GARBAGE_COLLECTOR, getName(), msg);
-        LoggingUtils.log(AgentType.BIN, getName(), "emptying capacity");
+        LoggingUtils.log(AgentType.BIN, getName(), "%s removed all the thrash".formatted(msg.getSender().getLocalName()));
         state.usedCapacityPct = 0;
         sendUpdateStatusForCapacity();
     }

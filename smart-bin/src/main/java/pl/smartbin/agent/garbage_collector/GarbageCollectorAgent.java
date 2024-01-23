@@ -86,6 +86,8 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                 }.getType());
                 var bins = allBins.keySet().toArray(new AID[0]);
                 propose = createMessage(ACLMessage.PROPOSE, FIPANames.InteractionProtocol.FIPA_PROPOSE, bins);
+                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(),
+                                 "Sending propose to %s bins".formatted(allBins.size()));
                 return super.prepareInitiations(propose);
             }
 
@@ -99,19 +101,9 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             @Override
             public void action() {
                 Map.Entry<AID, ACLMessage> nextBinEntry = null;
-
                 if (!binProposeBh.acceptedBins.isEmpty()) {
-
-                    int currentCapacity = 0;
-                    for (Map.Entry<AID, ACLMessage> binEntry : binProposeBh.acceptedBins.entrySet()) {
-                        int binUsedCapacity = JsonUtils.fromJson(binEntry.getValue().getContent(), BinData.class).usedCapacityPct;
-                        if (binUsedCapacity > currentCapacity) {
-                            currentCapacity = binUsedCapacity;
-                            nextBinEntry = binEntry;
-                        }
-                    }
+                    nextBinEntry = binProposeBh.acceptedBins.entrySet().stream().findFirst().get();
                 }
-
                 nextBinDs.put(NEXT_BIN_KEY, nextBinEntry);
             }
 
@@ -161,10 +153,6 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                 LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Got %s bins to clean left".formatted(binProposeBh.acceptedBins.size()));
 
                 tryCleanBin((Map.Entry<AID, ACLMessage>) nextBinDs.get(NEXT_BIN_KEY));
-
-                if (binProposeBh.acceptedBins.isEmpty()) {
-                    LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Garbage collector used capacity after collection: " + state.getUsedCapacity());
-                }
             }
 
             private void tryCleanBin(Map.Entry<AID, ACLMessage> binEntry) {
@@ -177,7 +165,6 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                     var reply = MessageUtils.createReply(binEntry.getValue(), ACLMessage.INFORM, MessageProtocol.Bin2GarbageCollector, null);
                     send(reply);
                     LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Emptying bin: " + binEntry.getKey().getLocalName());
-                    LoggingUtils.logSendMsg(AgentType.GARBAGE_COLLECTOR, reply);
                     binProposeBh.acceptedBins.remove(binEntry.getKey());
                 } else {
                     LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "No space left, cancelling garbage collection");
@@ -208,7 +195,7 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
             public void action() {
                 // garbage collection completed, we should probably INFORM here
                 var msg = gcBh.getResult().accepted;
-                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, this.myAgent.getName(), "Done collecting");
+                LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(), "Garbage collection is done. Capacity used: " + state.getUsedCapacity());
                 if (msg != null) {
                     var inform = MessageUtils.createReply(msg, ACLMessage.INFORM, null);
                     send(inform);

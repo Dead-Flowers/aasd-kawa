@@ -33,36 +33,18 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
     }
 
     @Override
-    protected void handleStateEntered(Behaviour state) {
-        super.handleStateEntered(state);
-        logFsmState(this, state);
-    }
-
-    @Override
-    protected void handlePropose(ACLMessage propose, Vector acceptances) {
-        logReceiveMsg(AgentType.SUPERVISOR, myAgent.getName(), propose);
-    }
-
-    @Override
-    protected void handleRefuse(ACLMessage refuse) {
-        logReceiveMsg(AgentType.SUPERVISOR, myAgent.getName(), refuse);
-    }
-
-    @Override
     protected void handleInform(ACLMessage inform) {
-        logReceiveMsg(AgentType.SUPERVISOR, myAgent.getName(), inform);
-        log(AgentType.SUPERVISOR, myAgent.getName(), "Finished garbage collection");
+        log(AgentType.SUPERVISOR, myAgent.getName(), "Received message that garbage collections has been finished");
     }
 
     @Override
     protected void handleAllResponses(Vector responses, Vector acceptances) {
-        log(AgentType.SUPERVISOR, myAgent.getName(), "Handle all responses: " + responses.size());
+        log(AgentType.SUPERVISOR, myAgent.getName(), "Number of received responses: " + responses.size());
         ACLMessage bestOffer = null;
         double bestOfferDist = 1e9;
 
         for (Object response : responses) {
             ACLMessage resp = (ACLMessage) response;
-            log(AgentType.SUPERVISOR, myAgent.getName(), "Perforative " + ((ACLMessage) response).getPerformative());
             if (ACLMessage.PROPOSE == resp.getPerformative()) {
                 ACLMessage reply = MessageUtils.createReply(resp, ACLMessage.REJECT_PROPOSAL, null);
 
@@ -89,18 +71,7 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
 
         bestOffer.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
         bestOffer.setContent(agent.getRegion());
-
-        log(AgentType.SUPERVISOR, myAgent.getName(), "Acceptances : " + acceptances.size());
-
-        for (Object accept : acceptances) {
-            ACLMessage resp = (ACLMessage) accept;
-            log(AgentType.SUPERVISOR, myAgent.getName(), "Accept performative " + ((ACLMessage) accept).getPerformative());
-        }
-    }
-
-    @Override
-    protected void handleAllResultNotifications(Vector resultNotifications) {
-        log(AgentType.SUPERVISOR, myAgent.getName(), "All result notifications");
+        log(AgentType.SUPERVISOR, myAgent.getName(), "Accepting offer from : " + ((AID) bestOffer.getAllReceiver().next()).getLocalName());
     }
 
     @Override
@@ -108,10 +79,8 @@ public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
         cfp = cfpSupplier.get();
         cfp.setContent(JsonUtils.toJson(binCapacitiesSupplier.get()));
         Vector x = super.prepareCfps(cfp);
-        for (Object msg : x) {
-            ((ACLMessage) msg).getAllReceiver().forEachRemaining(aid -> log(AgentType.SUPERVISOR, myAgent.getName(), "Preparing CFP for " + aid));
+        log(AgentType.SUPERVISOR, myAgent.getName(), "Sending CFPs to collectors");
 
-        }
         return x;
     }
 }
