@@ -1,20 +1,14 @@
 package pl.smartbin;
 
-import jade.core.AID;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
-import jade.wrapper.*;
-import pl.smartbin.agent.supervisor.SupervisorAgent;
+import jade.wrapper.ContainerController;
+import jade.wrapper.ControllerException;
 import pl.smartbin.dto.Location;
-import pl.smartbin.utils.LocationUtils;
 
-import javax.swing.*;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 import static pl.smartbin.utils.LocationUtils.getRandomLocation;
 
@@ -37,8 +31,8 @@ public class MainApplication {
         for (int i = 0; i < 2; i++) {
             Object[] agentArgs = new Object[]{getRandomLocation()};
             gui.createGarbageCollector(
-                "GarbageCollector " + i,
-                agentArgs
+                    "GarbageCollector " + i,
+                    agentArgs
             );
         }
         var locations = List.of(new Location(25, 50), new Location(75, 50));
@@ -58,8 +52,8 @@ public class MainApplication {
         for (int i = 0; i < 4; i++) {
             Object[] agentArgs = new Object[]{String.valueOf(i % 2), getRandomLocation()};
             gui.createBin(
-                "Bin " + i,
-                agentArgs
+                    "Bin " + i,
+                    agentArgs
             );
         }
 

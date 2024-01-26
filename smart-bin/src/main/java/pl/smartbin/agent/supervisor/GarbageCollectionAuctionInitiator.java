@@ -1,23 +1,20 @@
 package pl.smartbin.agent.supervisor;
 
 import jade.core.AID;
-import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 import pl.smartbin.AgentType;
 import pl.smartbin.dto.BinData;
 import pl.smartbin.dto.Location;
-import pl.smartbin.utils.AgentUtils;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LocationUtils;
 import pl.smartbin.utils.MessageUtils;
 
 import java.util.Map;
-import java.util.Random;
 import java.util.Vector;
 import java.util.function.Supplier;
 
-import static pl.smartbin.utils.LoggingUtils.*;
+import static pl.smartbin.utils.LoggingUtils.log;
 
 public class GarbageCollectionAuctionInitiator extends ContractNetInitiator {
 

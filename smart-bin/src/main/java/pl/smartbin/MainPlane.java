@@ -1,7 +1,6 @@
 package pl.smartbin;
 
 import jade.core.AID;
-import jade.core.NameClashException;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.ControllerException;
@@ -26,10 +25,10 @@ public class MainPlane extends JFrame {
     private static final int FRAME_HEIGHT = 800;
 
     private static MainPlane instance;
-    private ContainerController container;
-    private List<String> garbageCollectors;
-    private List<String> bins;
-    private List<String> beacons;
+    private final ContainerController container;
+    private final List<String> garbageCollectors;
+    private final List<String> bins;
+    private final List<String> beacons;
 
     private AgentPanel mainPanel;
     private StatsPanel statsPanel;
@@ -46,7 +45,7 @@ public class MainPlane extends JFrame {
 
     private void getDataFromAllAgents() {
         Map<String, GarbageCollectorData> newGcData = new HashMap<>();
-        for(String gcName: garbageCollectors) {
+        for (String gcName : garbageCollectors) {
             try {
                 AgentController agent = container.getAgent(gcName);
                 var binAgentInterface = agent.getO2AInterface(IGarbageCollectorAgent.class);
@@ -58,7 +57,7 @@ public class MainPlane extends JFrame {
         }
         Map<String, BinData> newBinData = new HashMap<>();
         Map<String, String> beaconMapping = new HashMap<>();
-        for(String binName: bins) {
+        for (String binName : bins) {
             try {
                 AgentController agent = container.getAgent(binName);
                 var binAgentInterface = agent.getO2AInterface(IBinAgent.class);
@@ -71,7 +70,7 @@ public class MainPlane extends JFrame {
             }
         }
         Map<String, Location> newBeaconData = new HashMap<>();
-        for(String beaconName: beacons) {
+        for (String beaconName : beacons) {
             try {
                 AgentController agent = container.getAgent(beaconName);
                 var beaconAgentInterface = agent.getO2AInterface(IBeaconAgent.class);
@@ -106,7 +105,7 @@ public class MainPlane extends JFrame {
         Location location = (Location) args[1];
         AID closestBeacon = null;
         double closestDist = 1e9;
-        for (String beaconName: beacons) {
+        for (String beaconName : beacons) {
             AgentController agent = container.getAgent(beaconName);
             var beaconAgentInterface = agent.getO2AInterface(IBeaconAgent.class);
             Location beaconLocation = beaconAgentInterface.getLocation();
@@ -176,7 +175,7 @@ public class MainPlane extends JFrame {
     public void addNewBin(int ordinalNo, Location location) throws IOException, ControllerException {
         AID closestBeacon = null;
         double closestDist = 1e9;
-        for (String beaconName: beacons) {
+        for (String beaconName : beacons) {
             AgentController agent = container.getAgent(beaconName);
             var beaconAgentInterface = agent.getO2AInterface(IBeaconAgent.class);
             Location beaconLocation = beaconAgentInterface.getLocation();
