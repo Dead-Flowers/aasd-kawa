@@ -3,16 +3,19 @@ package pl.smartbin;
 
 import pl.smartbin.agent.garbage_collector.GarbageCollectorData;
 import pl.smartbin.dto.BinData;
-import pl.smartbin.dto.Location;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class StatsPanel extends JPanel {
 
-    public record BeaconStat(int value, String beaconName) { }
+    public record BeaconStat(int value, String beaconName) {
+    }
 
     private Map<String, BeaconStat> binStats;
     private Map<String, Integer> garbageCollectorStats;
@@ -59,10 +62,10 @@ public class StatsPanel extends JPanel {
         this.binStats.clear();
         this.garbageCollectorStats.clear();
         this.beaconsOnline.clear();
-        for(var entry: binStats.entrySet()) {
+        for (var entry : binStats.entrySet()) {
             this.binStats.put(entry.getKey(), new BeaconStat(entry.getValue().usedCapacityPct, beaconMapping.get(entry.getKey())));
         }
-        for(var entry: gcStats.entrySet()) {
+        for (var entry : gcStats.entrySet()) {
             this.garbageCollectorStats.put(entry.getKey(), entry.getValue().getUsedCapacity());
         }
         this.beaconsOnline = beaconsOnline;
@@ -94,7 +97,7 @@ public class StatsPanel extends JPanel {
         add(beaconTitle);
         if (!beaconsOnline.isEmpty()) {
             var sortedBeacons = beaconsOnline.stream().sorted().toList();
-            for(String key: sortedBeacons) {
+            for (String key : sortedBeacons) {
                 JLabel label = new JLabel(key);
                 add(label);
             }
@@ -110,7 +113,7 @@ public class StatsPanel extends JPanel {
         add(binTitle);
         if (!binStats.isEmpty()) {
             var sortedBinKeys = binStats.keySet().stream().sorted().toList();
-            for(String key: sortedBinKeys) {
+            for (String key : sortedBinKeys) {
                 var value = binStats.get(key);
                 JLabel label = new JLabel(key + " (" + value.beaconName + "): " + value.value + "%");
                 add(label);
@@ -125,9 +128,9 @@ public class StatsPanel extends JPanel {
         JLabel gcTitle = new JLabel("Garbage trucks utilization");
         gcTitle.setFont(new Font("Arial", Font.PLAIN, 18));
         add(gcTitle);
-        if(!garbageCollectorStats.isEmpty()) {
+        if (!garbageCollectorStats.isEmpty()) {
             var sortedGCKeys = garbageCollectorStats.keySet().stream().sorted().toList();
-            for(String key: sortedGCKeys) {
+            for (String key : sortedGCKeys) {
                 JLabel label = new JLabel(key + ": " + garbageCollectorStats.get(key) + "%");
                 add(label);
             }

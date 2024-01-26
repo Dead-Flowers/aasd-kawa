@@ -87,7 +87,7 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
                 var bins = allBins.keySet().toArray(new AID[0]);
                 propose = createMessage(ACLMessage.PROPOSE, FIPANames.InteractionProtocol.FIPA_PROPOSE, bins);
                 LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getLocalName(),
-                                 "Sending propose to %s bins".formatted(allBins.size()));
+                        "Sending propose to %s bins".formatted(allBins.size()));
                 return super.prepareInitiations(propose);
             }
 
@@ -119,6 +119,7 @@ public class GarbageCollectorAgent extends Agent implements IGarbageCollectorAge
         var driveBh = new SimpleBehaviour() {
 
             private Location targetLocation = null;
+
             @SneakyThrows
             @Override
             public void action() {

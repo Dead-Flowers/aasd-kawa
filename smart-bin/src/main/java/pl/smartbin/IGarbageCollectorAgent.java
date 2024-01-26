@@ -5,5 +5,6 @@ import pl.smartbin.dto.Location;
 
 public interface IGarbageCollectorAgent {
     Location getCurrentLocation();
+
     GarbageCollectorData getData();
 }

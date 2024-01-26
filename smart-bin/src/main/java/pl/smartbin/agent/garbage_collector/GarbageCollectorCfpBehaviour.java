@@ -1,7 +1,6 @@
 package pl.smartbin.agent.garbage_collector;
 
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
@@ -16,7 +15,6 @@ import pl.smartbin.AgentType;
 import pl.smartbin.dto.Location;
 import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
-import pl.smartbin.utils.MessageUtils;
 
 import java.time.Instant;
 import java.util.Date;
@@ -50,7 +48,7 @@ public class GarbageCollectorCfpBehaviour extends ContractNetResponder {
             public void action() {
                 if (result.accepted != null) {
                     LoggingUtils.log(AgentType.GARBAGE_COLLECTOR, myAgent.getName(),
-                                     "Starting garbage collection for " + result.accepted.getSender().getLocalName());
+                            "Starting garbage collection for " + result.accepted.getSender().getLocalName());
                 }
             }
         }, "Final");

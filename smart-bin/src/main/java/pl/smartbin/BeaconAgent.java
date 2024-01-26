@@ -16,12 +16,9 @@ import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
-import javax.swing.*;
 import java.util.HashMap;
 
-import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
-
-public class BeaconAgent extends Agent implements IBeaconAgent{
+public class BeaconAgent extends Agent implements IBeaconAgent {
     private final HashMap<AID, BinData> binCapacities = new HashMap<>();
     private Location location;
     private MainPlane gui;
@@ -39,12 +36,12 @@ public class BeaconAgent extends Agent implements IBeaconAgent{
                 if (prevCapacity != null && prevCapacity.usedCapacityPct <= 50 && val.usedCapacityPct > 50) {
                     binCapacities.put(msg.getSender(), val);
                     LoggingUtils.log(AgentType.BEACON, getLocalName(),
-                                     "Number of bins beeing filled over half of the capacity: %s of %s".formatted(
-                                     binCapacities.values().stream().map(bd -> bd.usedCapacityPct).filter(v -> v > 50).count(),
-                                     binCapacities.entrySet().size()));
+                            "Number of bins beeing filled over half of the capacity: %s of %s".formatted(
+                                    binCapacities.values().stream().map(bd -> bd.usedCapacityPct).filter(v -> v > 50).count(),
+                                    binCapacities.entrySet().size()));
                 } else if (prevCapacity != null && prevCapacity.usedCapacityPct <= 95 && val.usedCapacityPct > 95) {
                     LoggingUtils.log(AgentType.BEACON, getLocalName(),
-                                     "One of the bins if filled over 95% of its capacity");
+                            "One of the bins if filled over 95% of its capacity");
                 }
                 binCapacities.put(msg.getSender(), val);
                 break;

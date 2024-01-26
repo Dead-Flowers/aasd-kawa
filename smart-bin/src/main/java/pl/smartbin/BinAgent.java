@@ -5,9 +5,8 @@ import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.*;
-import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -19,15 +18,11 @@ import pl.smartbin.utils.JsonUtils;
 import pl.smartbin.utils.LoggingUtils;
 import pl.smartbin.utils.MessageUtils;
 
-import javax.swing.*;
 import java.util.Random;
-
-import static pl.smartbin.utils.LoggingUtils.logReceiveMsg;
 
 public class BinAgent extends Agent implements IBinAgent {
 
     private BinData state;
-//    private String regionId;
     private Location location;
     private AID beaconAID;
     private MainPlane gui;
@@ -45,31 +40,6 @@ public class BinAgent extends Agent implements IBinAgent {
         this.location = (Location) this.getArguments()[1];
         state = new BinData(location, new Random().nextInt(0, 40));
         AgentUtils.registerAgent(this, AgentType.BIN); // AgentUtils.getRegionProp(regionId)
-
-//        var discoveryBh = new TickerBehaviour(this, 1000) {
-//            @Override
-//            public void onTick() {
-//                var prop = new Property();
-//                prop.setName("region_id");
-//                prop.setValue(regionId);
-//
-//                DFAgentDescription template = new DFAgentDescription();
-//                ServiceDescription serviceDescription = new ServiceDescription();
-//                serviceDescription.setType("beacon");
-//                serviceDescription.addProperties(prop);
-//                template.addServices(serviceDescription);
-//                try {
-//                    DFAgentDescription[] result = DFService.search(myAgent, template);
-//                    //System.out.printf("[bin %s] Found %d beacons\n", getName(), result.length);
-//                    if (result.length == 1) {
-//                        beaconAID = result[0].getName();
-//                        //    System.out.printf("[bin %s] Found beacon %s\n", getName(), beaconAID.getName());
-//                    }
-//                } catch (FIPAException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        };
 
         var increaseUsedCapacityRandomlyBh = new TickerBehaviour(this, 2000) {
             @Override
@@ -111,7 +81,7 @@ public class BinAgent extends Agent implements IBinAgent {
                     content = JsonUtils.toJson(state);
                 } else {
                     LoggingUtils.log(AgentType.BIN, getLocalName(),
-                                     "My capacity used is below 50 percent (%s). Rejecting garbage collection proposal.".formatted(state.usedCapacityPct));
+                            "My capacity used is below 50 percent (%s). Rejecting garbage collection proposal.".formatted(state.usedCapacityPct));
                     decision = ACLMessage.REJECT_PROPOSAL;
                 }
                 return MessageUtils.createReply(propose, decision, content);
@@ -143,7 +113,7 @@ public class BinAgent extends Agent implements IBinAgent {
     }
 
     private void handleInform(ACLMessage msg) {
-        LoggingUtils.log(AgentType.BIN, getName(), "%s removed all the thrash".formatted(msg.getSender().getLocalName()));
+        LoggingUtils.log(AgentType.BIN, getName(), "%s removed all the trash".formatted(msg.getSender().getLocalName()));
         state.usedCapacityPct = 0;
         sendUpdateStatusForCapacity();
     }

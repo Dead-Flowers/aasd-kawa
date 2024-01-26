@@ -11,20 +11,20 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AgentPanel extends JPanel {
 
-    record BinImageLocationData(int x, int y, int width, int height) {}
+    record BinImageLocationData(int x, int y, int width, int height) {
+    }
 
     private final Map<String, BinOnPlane> bins;
 
     private final Map<String, BinImageLocationData> binImageLocationDataMap;
     private final Map<String, GarbageCollectorOnPlane> trucks;
     private final Map<String, BeaconOnPlane> beacons;
-    private MainPlane gui;
+    private final MainPlane gui;
 
     public AgentPanel() {
         bins = new ConcurrentHashMap<>();
@@ -60,14 +60,14 @@ public class AgentPanel extends JPanel {
         int y = e.getY();
 
         if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
-            gui.addNewBin(lastBinNo + 1, new Location(x*100f / getWidth(),  y*100f /  getHeight()));
+            gui.addNewBin(lastBinNo + 1, new Location(x * 100f / getWidth(), y * 100f / getHeight()));
         }
     }
 
     private void checkIfBinPressed(MouseEvent e) {
         int mouseX = e.getX();
         int mouseY = e.getY();
-        for(var binImgEntry : binImageLocationDataMap.entrySet()) {
+        for (var binImgEntry : binImageLocationDataMap.entrySet()) {
             var v = binImgEntry.getValue();
             if (mouseX > v.x && mouseX < (v.x + v.width)) {
                 if (mouseY > v.y && mouseY < (v.y + v.height)) {
@@ -132,19 +132,19 @@ public class AgentPanel extends JPanel {
     }
 
     public void updateGcs(Map<String, GarbageCollectorData> newData) throws IOException {
-        for(var entry : newData.entrySet()) {
+        for (var entry : newData.entrySet()) {
             trucks.put(entry.getKey(), new GarbageCollectorOnPlane(entry.getValue().getLocation(), entry.getKey(), entry.getValue().getUsedCapacity()));
         }
     }
 
     public void updateBins(Map<String, BinData> newData) throws IOException {
-        for(var entry : newData.entrySet()) {
+        for (var entry : newData.entrySet()) {
             bins.put(entry.getKey(), new BinOnPlane(entry.getValue().location, entry.getKey(), entry.getValue().usedCapacityPct));
         }
     }
 
     public void updateBeacons(Map<String, Location> newData) throws IOException {
-        for(var entry : newData.entrySet()) {
+        for (var entry : newData.entrySet()) {
             beacons.put(entry.getKey(), new BeaconOnPlane(entry.getValue(), entry.getKey()));
         }
     }
@@ -211,7 +211,7 @@ public class AgentPanel extends JPanel {
                         binImage.getHeight(this)
                 )
         );
-        g.drawString(bin.getName(), dotX - BinOnPlane.ICON_WIDTH/2, dotY + 10);
+        g.drawString(bin.getName(), dotX - BinOnPlane.ICON_WIDTH / 2, dotY + 10);
     }
 
     private void drawTruck(Graphics g, GarbageCollectorOnPlane truck) {
@@ -221,7 +221,7 @@ public class AgentPanel extends JPanel {
         g.setColor(Color.BLACK);
         Image truckImage = truck.getImage();
         g.drawImage(truckImage, dotX, dotY, null);
-        g.drawString(truck.getName(), dotX - BinOnPlane.ICON_WIDTH/2, dotY + 10);
+        g.drawString(truck.getName(), dotX - BinOnPlane.ICON_WIDTH / 2, dotY + 10);
     }
 
     private void drawBeacon(Graphics g, BeaconOnPlane beacon) {
@@ -231,6 +231,6 @@ public class AgentPanel extends JPanel {
         g.setColor(Color.BLACK);
         Image beaconImage = beacon.getImage();
         g.drawImage(beaconImage, dotX, dotY, null);
-        g.drawString(beacon.getName(), dotX - BinOnPlane.ICON_WIDTH/2, dotY + 10);
+        g.drawString(beacon.getName(), dotX - BinOnPlane.ICON_WIDTH / 2, dotY + 10);
     }
 }

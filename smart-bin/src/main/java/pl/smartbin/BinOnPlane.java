@@ -8,10 +8,9 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Random;
 
 @Getter
-public class BinOnPlane extends ObjectOnPlane{
+public class BinOnPlane extends ObjectOnPlane {
 
     public static final int ICON_WIDTH = 40;
     public static final int ICON_HEIGHT = 40;
